@@ -139,7 +139,7 @@ class AdminLoginView(View):
                     return redirect('sysadmin:voters')
                 else:
                     # If not, redirect to the admin's page
-                    return redirect('passcode:passcode')
+                    return redirect('passcode:voters')
             except Group.DoesNotExist:
                 # If the queried group does not exist, log the user out
                 logout(request)
@@ -173,7 +173,7 @@ class AdminLoginView(View):
                         if Group.objects.get(name='comelec') in user.groups.all():
                             login(request, user)
 
-                            return redirect('passcode:passcode')
+                            return redirect('passcode:voters')
                         # If the user is a system administrator, log the user in
                         elif Group.objects.get(name='sysadmin') in user.groups.all():
                             login(request, user)
