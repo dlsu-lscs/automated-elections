@@ -8,7 +8,7 @@
     font-family: 'Montserrat', sans-serif;
     color: var(--theme-green);
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 1.5rem;
 }
 
 .voter-info {
@@ -16,23 +16,23 @@
     padding-top: 5px;
     padding-bottom: 5px;
     margin-bottom: 25px;
+    font-size: 1.3rem;
 }
 
 #voter-column,
 #candidates-column {
-    height: 100%;
+    padding: 0 10% 0 10%;
+    width: 80%;
     display: inline-block;
     float: left;
 }
 
 #voter-column {
     background-color: var(--theme-lighter-grey);
-    width: 180px;
-    padding: 40px;
+    padding-top: 30px;
 }
 
 #candidates-column {
-    width: calc(100% - 260px);
     background-color: white;
     text-align: center;
 }
