@@ -18,12 +18,16 @@ function selectAll() {
     }
 }
 
-function pausePlay(state) {
+function setState(state) {
     let form = document.getElementById('election-form-type');
 
-    if (state === 'ongoing') {
-        form.value = 'pause-elections';
-    } else if (state === 'paused') {
-        form.value = 'resume-elections';
+    switch (state) {
+        case "start": form.value = 'start-elections'; break;
+        case "pause": form.value = 'pause-elections'; break;
+        case "resume": form.value = 'resume-elections'; break;
+        case "end": form.value = 'end-elections'; break;
+        case "unblock": form.value = 'unblock-results'; break;
+        case "archive": form.value = 'archive-results'; break;
+        default: form.value = 'start-elections';
     }
 }
