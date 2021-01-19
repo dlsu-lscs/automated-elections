@@ -34,10 +34,10 @@
 
 <!-- TABS BUTTONS TO TRAVERSE THE DIFF SECTIONS -->
 <div id="tab-buttons-container">
-    <button class="tab-buttons active" onclick="openTab(event, 'Controls')" id="tab-controls">Election Control</button>
+    <button class="tab-buttons {% if not open_audit %}active{% endif %}" onclick="openTab(event, 'Controls')" id="tab-controls">Election Control</button>
     <button class="tab-buttons" onclick="openTab(event, 'Unblock')" id="tab-archive">Unblock Results</button>
     <button class="tab-buttons" onclick="openTab(event, 'Archive')" id="tab-archive">Archive all results</button>
-    <button class="tab-buttons" onclick="openTab(event, 'Audit')" id="tab-archive">Check Audits</button>
+    <button class="tab-buttons {% if open_audit %}active{% endif %}" onclick="openTab(event, 'Audit')" id="tab-archive">Check Audits</button>
 </div>
 
 <!-- CONTAINER WHERE TABS WILL OCCUPY -->
@@ -52,7 +52,7 @@
         </div>
     {% endif %}
 
-    <div id="Controls" class="tab-content">
+    <div id="Controls" class="tab-content" style="{% if open_audit %}display: none{% endif %}">
         {% if election_state == 'finished' or election_state == 'blocked' %}
             <img id="stop" src="{% static 'passcode/assets/svg/stop.svg' %}">
             <header>Woah there!</header>
@@ -210,7 +210,7 @@
         </div>
     </div>
 
-    <div id="Audit" class="tab-content" style="display: none">
+    <div id="Audit" class="tab-content" style="{% if not open_audit %}display: none{% endif %}">
         {% if audits %}
             <div id="table-container">
                 <div class="table-row row-0">
@@ -219,22 +219,43 @@
                 </div>
 
                 <!-- TEMPLATES FOR DATA INSERTION. NOTE THAT THERE IS A "row-1" AND "row-2"  FOR THEIR ALTERNATING COLORS -->
-                {% for audit in audits.0 %}
+                {% for audit in audits %}
                     <div class="table-row {% cycle 'row-1' 'row-2' %}">
                         <div class="col-ID">{{ audit.0 }}</div>
                         <div class="col-TS">{{ audit.1 }}</div>
                     </div>
                 {% endfor %}
-            </div>
-        {% else %}
-            <header>Oops!</header>
-            <div class="prohibited">
-                No one has voted yet.
-            </div>
-        {% endif %}
 
-        <div id="logo">
-            <img width=500 height=50 src="{% static 'passcode/assets/svg/org-logos.svg' %}">
+                <div class="pagination">
+                    <span class="step-links">
+                        {% if audits.has_previous %}
+                        <a href="?page=1&audit=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">&laquo;
+                            first</a>
+                        <a
+                            href="?page={{ audits.previous_page_number }}&audit=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">previous</a>
+                        {% endif %}
+                        <span class="current">Page {{ audits.number }} of {{ audits.paginator.num_pages }}.</span>
+    
+                        {% if audits.has_next %}
+                        <a
+                            href="?page={{ audits.next_page_number }}&audit=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">next</a>
+                        <a
+                            href="?page={{ audits.paginator.num_pages }}&audit=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">last
+                            &raquo;</a>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% else %}
+                <header>Oops!</header>
+                <div class="prohibited">
+                    No one has voted yet.
+                </div>
+            {% endif %}
+
+            <div id="logo">
+                <img width=500 height=50 src="{% static 'passcode/assets/svg/org-logos.svg' %}">
+            </div>
         </div>
     </div>
 </div>
