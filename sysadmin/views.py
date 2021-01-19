@@ -287,6 +287,14 @@ class ElectionsView(SysadminView):
                 return render(request, self.template_name, context)
 
             elif form_type == 'end-elections':
+                if self.is_votes_empty():
+                    # If there no votes then don't end the elections
+                    messages.error(request,
+                                   'There aren\'t any votes yet.')
+
+                    context = self.get_context(1, False)
+
+                    return render(request, self.template_name, context)
                 # If the elections have already ended, it can't be ended again!
                 if election_state == ElectionState.ONGOING.value or election_state == ElectionState.PAUSED.value:
                     # Only continue if the re-authentication password indeed matches the password of the current
@@ -581,7 +589,13 @@ class ElectionsView(SysadminView):
                 return render(request, self.template_name, context)
 
             elif form_type == "unblock-results":
-                # If the elections have already ended, it can't be ended again!
+                if self.is_votes_empty():
+                    messages.error(request,
+                                   'There aren\'t any votes.')
+
+                    context = self.get_context(1, False)
+
+                    return render(request, self.template_name, context)
                 if election_state == ElectionState.BLOCKED.value:
                     # Only continue if the re-authentication password indeed matches the password of the current
                     # COMELEC officer
