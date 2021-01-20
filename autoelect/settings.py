@@ -168,13 +168,18 @@ GOOGLE_RECAPTCHA_SECRET_KEY = env('GOOGLE_RECAPTCHA_SECRET_KEY')
 # Logging settings
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
     'formatters': {
         'default': {
             'format': '[%(asctime)s] %(message)s'
         }
     },
     'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default'
+        },
         'httpFile': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
@@ -184,7 +189,7 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['httpFile'],
+            'handlers': ['console', 'httpFile'],
             'level': 'DEBUG',
             'propagate': True,
         },
