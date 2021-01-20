@@ -274,6 +274,8 @@ class VoteView(UserPassesTestMixin, View):
                     with transaction.atomic():
                         # Create a vote object to represent a single vote of a user
                         vote = Vote(voter_id_number=voter.user.username, voter_college=voter.college.name)
+
+                        vote.serial_number = '##########'
                         vote.save()
 
                         # Generate its serial number

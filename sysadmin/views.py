@@ -132,7 +132,7 @@ class ElectionsView(SysadminView):
             "ON\n"
             "    x.user_id=a.id\n"
             "WHERE\n"
-            "    x.entity_id=1 AND x.xaction_type=\"I\"\n"
+            "    x.entity_id=1 AND x.xaction_type='I'\n"
             "ORDER BY\n"
             "    x.id DESC\n"
             "LIMIT\n"

@@ -27,10 +27,10 @@ class Migration(migrations.Migration):
             name='identifier',
             field=models.UUIDField(default=uuid.uuid4, editable=False, unique=False),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='vote',
             name='serial_number',
-            field=models.CharField(default=models.CharField(max_length=8, unique=True), max_length=6, unique=True),
+            field=models.CharField(default=models.CharField(max_length=8, unique=True), max_length=10, unique=True),
         ),
         migrations.AddField(
             model_name='vote',
