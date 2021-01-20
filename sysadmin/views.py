@@ -341,7 +341,7 @@ class ElectionsView(SysadminView):
                     # The submitted form is for archiving the election results
                     # Only continue if the re-authentication password indeed matches the password of the current
                     # COMELEC officer
-                    reauth_password = request.POST.get('reauth-archive', False)
+                    reauth_password = request.POST.get('reauth', False)
 
                     if reauth_password is False \
                             or authenticate(username=request.user.username, password=reauth_password) is None:
@@ -600,7 +600,7 @@ class ElectionsView(SysadminView):
                 if election_state == ElectionState.BLOCKED.value:
                     # Only continue if the re-authentication password indeed matches the password of the current
                     # COMELEC officer
-                    reauth_password = request.POST.get('reauth-unblock', False)
+                    reauth_password = request.POST.get('reauth', False)
 
                     if reauth_password is False \
                             or authenticate(username=request.user.username, password=reauth_password) is None:
