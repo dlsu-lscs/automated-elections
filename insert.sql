@@ -55,8 +55,7 @@ INSERT INTO vote_baseposition(name, type) VALUES
     ('Batch President', 'Batch'),
     ('Batch Vice President', 'Batch'),
     ('LA Representative', 'Batch'),
-    ('College President', 'College'),
-    ('');
+    ('College President', 'College');
 
 INSERT INTO vote_unit(batch, name, college_id) VALUES
     ('117', 'CATCH2T21', 1),

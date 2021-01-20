@@ -341,7 +341,7 @@ class ElectionsView(SysadminView):
                     # The submitted form is for archiving the election results
                     # Only continue if the re-authentication password indeed matches the password of the current
                     # COMELEC officer
-                    reauth_password = request.POST.get('reauth-archive', False)
+                    reauth_password = request.POST.get('reauth', False)
 
                     if reauth_password is False \
                             or authenticate(username=request.user.username, password=reauth_password) is None:
@@ -391,7 +391,7 @@ class ElectionsView(SysadminView):
                                 	LEFT JOIN
                                 		vote_unit u ON p.unit_id = u.id
                                 	GROUP BY
-                                		ac.position_id, ac.candidate_id
+                                		ac.position_id, ac.candidate_id, bp.name, u.name
                                 ),
                                 candidate_name AS (
                                 	SELECT
@@ -414,7 +414,7 @@ class ElectionsView(SysadminView):
                                 party_name AS (
                                 	SELECT
                                 		cn.position AS position,
-                                		cn.unit AS 'Unit',
+                                		cn.unit AS unit,
                                 		cn.candidate AS candidate,
                                 		CASE cn.candidate
                                 			WHEN '(abstained)' THEN '(abstained)'
@@ -441,17 +441,17 @@ class ElectionsView(SysadminView):
 
                             TOTAL_POLL_VOTES_QUERY = ("""
                                 SELECT
-                                   p.'name' AS 'Question',
-                                   SUM((CASE WHEN ps.'answer' = 'yes' THEN 1 ELSE 0 END)) AS 'Yes',
-                                   SUM((CASE WHEN ps.'answer' = 'no' THEN 1 ELSE 0 END)) AS 'No'
+                                   p.name AS question,
+                                   SUM((CASE WHEN ps.answer = 'yes' THEN 1 ELSE 0 END)) AS yes,
+                                   SUM((CASE WHEN ps.answer = 'no' THEN 1 ELSE 0 END)) AS no
                                 FROM
                                    vote_pollset ps
                                 LEFT JOIN
                                    vote_poll p
                                 ON
-                                   ps.'poll_id' = p.'id'
+                                   ps.poll_id = p.id
                                 GROUP BY
-                                   p.'id';
+                                   p.id;
                             """)
 
                             vote_results = {}
@@ -600,7 +600,7 @@ class ElectionsView(SysadminView):
                 if election_state == ElectionState.BLOCKED.value:
                     # Only continue if the re-authentication password indeed matches the password of the current
                     # COMELEC officer
-                    reauth_password = request.POST.get('reauth-unblock', False)
+                    reauth_password = request.POST.get('reauth', False)
 
                     if reauth_password is False \
                             or authenticate(username=request.user.username, password=reauth_password) is None:

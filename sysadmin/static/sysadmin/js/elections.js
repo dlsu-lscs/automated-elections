@@ -30,4 +30,6 @@ function setState(state) {
         case "archive": form.value = 'archive-results'; break;
         default: form.value = 'start-elections';
     }
+
+    showControls();
 }

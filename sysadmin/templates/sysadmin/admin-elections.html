@@ -55,19 +55,13 @@
     {% endif %}
 
     <div id="Controls" class="tab-content" style="{% if open_audit %}display: none{% endif %}">
-        <!-- {% if election_state == 'finished' or election_state == 'blocked' %}
-            <img id="stop" src="{% static 'passcode/assets/svg/stop.svg' %}">
-            <header>Woah there!</header>
-            <div class="prohibited">
-                You may not start any elections until the results are archived.
-            </div>
-        {% else %} -->
-            <div class="controls-container">
-                <form action="" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="form-type" id="election-form-type"
-                            value="{% if not election_state or election_state == 'archived' %}start-elections{% elif election_state == 'ongoing' or election_state == 'paused' %}end-elections{% endif %}">
+        <div class="controls-container">
+            <form action="" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="form-type" id="election-form-type"
+                        value="{% if not election_state or election_state == 'archived' %}start-elections{% elif election_state == 'ongoing' or election_state == 'paused' %}end-elections{% endif %}">
 
+                {% if election_state != 'finished' and election_state != 'blocked' %}
                     <div class="controls-header">
                         Colleges
                         {% if not election_state or election_state == 'archived' %}
@@ -110,46 +104,48 @@
                             {% endif %}
                         </div>
                     {% endfor %}
-                    <div class="controls-instruction">
-                            <b>Reenter your password</b>, then click the <b>open 
-                            controls </b> button to see your options.
+                {% endif %}
+                <div class="controls-instruction">
+                        <b>Reenter your password</b>, then click the <b>open 
+                        controls </b> button to see your options.
+                </div>
+                <div class="controls">
+                    <label class="info-label" for="reauth">Reenter your password</label>
+                    <br>
+                    <input id="reauth" class="password-reauth" type="password" name="reauth" required="required">
+                    <br>
+                    <div id="election-controls">
+                        {% if election_state == "finished" %}
+                            <button type="button" id="archive" class="control-confirm" onclick="setState('archive')">Archive Elections</button>
+                        {% endif %}
+                        {% if election_state == "blocked" %}
+                            <button type="button" id="unblock" class="control-confirm" onclick="setState('unblock')">Unblock Elections</button>
+                        {% endif %}
+                        {% if election_state == "ongoing" or election_state == "paused" %}
+                            <button type="button" id="end" class="control-cancel" onclick="setState('end')">End Elections</button>
+                        {% endif %}
+                        {% if election_state == "paused" %}
+                            <button type="button" id="resume" class="control-confirm" onclick="setState('resume')">Resume Elections</button>
+                        {% endif %}
+                        {% if election_state == "ongoing" %}
+                            <button type="button" id="pause" class="control-confirm" onclick="setState('pause')">Pause Elections</button>
+                        {% endif %}
+                        {% if not election_state or election_state == "archived" %}
+                            <button type="button" id="start" class="control-confirm" onclick="setState('start')">Start Elections</button>
+                        {% endif %}
                     </div>
-                    <div class="controls">
-                        <label class="info-label" for="reauth">Reenter your password</label>
-                        <br>
-                        <input id="reauth" class="password-reauth" type="password" name="reauth" required="required">
-                        <br>
-                        <button id="open_controls" type="button" class="confirm button" onclick="showControls()">Submit Password</button>
-                    </div>
-                    <div id="election-modal">
-                        <div id="election-controls">
-                            <div class="controls-header">Election Controls</div>
-                            <div id="controls-confirm" class="clearfix">
-                                <button type="button" id="close" class="control-cancel" onclick="closeModal(event)">Cancel</button>
-                                {% if election_state == "finished" %}
-                                    <input type="submit" id="archive" class="control-confirm" value="Archive Elections" onclick="setState('archive')"/>
-                                {% endif %}
-                                {% if election_state == "blocked" %}
-                                    <input type="submit" id="unblock" class="control-confirm" value="Unblock Elections" onclick="setState('unblock')"/>
-                                {% endif %}
-                                {% if election_state == "ongoing" or election_state == "paused" %}
-                                    <input type="submit" id="end" class="control-confirm" value="End Elections" onclick="setState('end')"/>
-                                {% endif %}
-                                {% if election_state == "paused" %}
-                                    <input type="submit" id="resume" class="control-confirm" value="Resume Elections" onclick="setState('resume')"/>
-                                {% endif %}
-                                {% if election_state == "ongoing" %}
-                                    <input type="submit" id="pause" class="control-confirm" value="Pause Elections" onclick="setState('pause')"/>
-                                {% endif %}
-                                {% if not election_state or election_state == "archived" %}
-                                    <input type="submit" id="start" class="control-confirm" value="Start Elections" onclick="setState('start')"/>
-                                {% endif %}
-                            </div>
+                </div>
+                <div id="election-modal">
+                    <div id="modal-controls">
+                        <div class="controls-header">Confirm Action</div>
+                        <div id="controls-confirm" class="clearfix">
+                            <button type="button" id="close" class="control-cancel" onclick="closeModal(event)">Cancel</button>
+                            <input type="submit" id="submit" class="control-confirm" value="Confirm"/>
                         </div>
                     </div>
-                </form>
-            </div>
-        <!-- {% endif %} -->
+                </div>
+            </form>
+        </div>
         <div id="logo">
             <img width=500 height=50 src="{% static 'passcode/assets/svg/org-logos.svg' %}">
         </div>

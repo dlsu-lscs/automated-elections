@@ -11,15 +11,23 @@
     background-color: rgba(0, 0, 0, 0.4);
 }
 
-#election-controls {
+#modal-controls {
     height:25%;
     background-color: #fefefe;
     margin: 15% auto;
     padding: 20px;
     padding-top: 50px;
     border: 1px solid #888;
-    width: 50%;
+    width: 30%;
     position: relative;
+}
+
+#election-controls {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 #controls-confirm {
@@ -30,6 +38,7 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .control-cancel,
@@ -46,7 +55,6 @@
     cursor: pointer;
     -webkit-transition: all 0.2s ease;
     float: right;
-    flex-grow: 1;
     margin: 5px;
     height: 50px;
 }
@@ -65,4 +73,28 @@
     border: 0;
     background-color: green;
     color: white;
+}
+
+#archive {
+    order: 6;   
+}
+
+#unblock {
+    order: 5;   
+}
+
+#end {
+    order: 4;   
+}
+
+#resume {
+    order: 3;   
+}
+
+#pause {
+    order: 2;   
+}
+
+#start {
+    order: 1;   
 }
