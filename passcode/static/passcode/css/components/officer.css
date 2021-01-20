@@ -428,3 +428,10 @@ select {
     margin-top: 100px;
     margin-bottom: 30px;
 }
+
+.student-population {
+    font-size: 30px;
+    font-family: montserrat;
+    color: #36A472;
+    text-align: center;
+}

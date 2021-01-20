@@ -359,18 +359,18 @@ class ElectionsView(SysadminView):
                             TOTAL_VOTES_QUERY = ("""
                                 WITH all_candidates AS (
                                 	SELECT
-                                		c.id AS 'CandidateID',
-                                		c.position_id AS 'PositionID',
-                                		IFNULL(vs.position_id, NULL) AS 'HasBeenVoted'
+                                		c.id AS candidate_id,
+                                		c.position_id AS position_id,
+                                		vs.position_id AS has_been_voted
                                 	FROM
                                 		vote_candidate c
                                 	LEFT JOIN
                                 		vote_voteset vs ON c.id = vs.candidate_id
                                 	UNION ALL
                                 	SELECT
-                                		vs.candidate_id AS 'CandidateID',
-                                		vs.position_id AS 'PositionID',
-                                		IFNULL(vs.position_id, NULL) AS 'HasBeenVoted'
+                                		vs.candidate_id AS candidate_id,
+                                		vs.position_id AS position_id,
+                                		vs.position_id AS has_been_voted
                                 	FROM
                                 		vote_voteset vs
                                 	WHERE
@@ -378,32 +378,32 @@ class ElectionsView(SysadminView):
                                 ),
                                 raw_count_position AS (
                                 	SELECT
-                                		bp.name AS 'Position',
-                                		u.name AS 'Unit',
-                                		ac.'CandidateID' AS 'CandidateID',
-                                		COUNT(ac.'HasBeenVoted') AS 'Votes'
+                                		bp.name AS position,
+                                		u.name AS unit,
+                                		ac.candidate_id AS candidate_id,
+                                		COUNT(ac.has_been_voted) AS votes
                                 	FROM
                                 		all_candidates ac
                                 	LEFT JOIN
-                                		vote_position p ON ac.'PositionID' = p.id
+                                		vote_position p ON ac.position_id = p.id
                                 	LEFT JOIN
                                 		vote_baseposition bp ON p.base_position_id = bp.id
                                 	LEFT JOIN
                                 		vote_unit u ON p.unit_id = u.id
                                 	GROUP BY
-                                		ac.'PositionID', ac.'CandidateID'
+                                		ac.position_id, ac.candidate_id
                                 ),
                                 candidate_name AS (
                                 	SELECT
-                                		rcp.'Position',
-                                		rcp.'Unit',
-                                		IFNULL(u.first_name || ' ' || u.last_name, '(abstained)') AS 'Candidate',
-                                		p.name AS 'Party',
-                                		rcp.'Votes'
+                                		rcp.position,
+                                		rcp.unit,
+                                		COALESCE(u.first_name || ' ' || u.last_name, '(abstained)') AS candidate,
+                                		p.name AS party,
+                                		rcp.votes
                                 	FROM
                                 		raw_count_position rcp
                                 	LEFT JOIN
-                                		vote_candidate c ON rcp.'CandidateID' = c.id
+                                		vote_candidate c ON rcp.candidate_id = c.id
                                 	LEFT JOIN
                                 		vote_voter v ON c.voter_id = v.id
                                 	LEFT JOIN
@@ -413,30 +413,30 @@ class ElectionsView(SysadminView):
                                 ),
                                 party_name AS (
                                 	SELECT
-                                		cn.'Position' AS 'Position',
-                                		cn.'Unit' AS 'Unit',
-                                		cn.'Candidate' AS 'Candidate',
-                                		CASE cn.'Candidate'
+                                		cn.position AS position,
+                                		cn.unit AS 'Unit',
+                                		cn.candidate AS candidate,
+                                		CASE cn.candidate
                                 			WHEN '(abstained)' THEN '(abstained)'
-                                			ELSE IFNULL(cn.'Party', 'Independent')
-                                		END AS 'Party',
-                                		cn.'Votes' AS 'Votes'
+                                			ELSE COALESCE(cn.party, 'Independent')
+                                		END AS party,
+                                		cn.votes AS votes
                                 	FROM
                                 		candidate_name cn
                                 )
                                 SELECT
-                                	pn.'Position' AS 'Position',
-                                	pn.'Unit' AS 'Unit',
-                                	pn.'Candidate' AS 'Candidate',
-                                	pn.'Party' AS 'Party',
-                                	pn.'Votes' AS 'Votes'
+                                	pn.position AS position,
+                                	pn.unit AS unit,
+                                	pn.candidate AS candidate,
+                                	pn.party AS party,
+                                	pn.votes AS votes
                                 FROM
                                 	party_name pn
                                 ORDER BY
-                                	pn.'Position',
-                                	pn.'Unit',
-                                	pn.'Votes' DESC,
-                                	pn.'Candidate';
+                                	pn.position,
+                                	pn.unit,
+                                	pn.votes DESC,
+                                	pn.candidate;
                             """)
 
                             TOTAL_POLL_VOTES_QUERY = ("""
