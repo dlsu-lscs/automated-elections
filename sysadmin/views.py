@@ -112,7 +112,7 @@ class ElectionsView(SysadminView):
             return None
 
     @staticmethod
-    def get_context():
+    def get_context(page, audit):
         # Retrieve all colleges
         colleges = College.objects.all().order_by('name')
 
@@ -144,6 +144,9 @@ class ElectionsView(SysadminView):
 
             audits.append(cursor.fetchall())
 
+        paginator = Paginator(audits[0], 5)
+        paginated_audits = paginator.get_page(page)
+
         context = {}
 
         if not election_state or election_state == ElectionState.ARCHIVED.value:
@@ -158,7 +161,8 @@ class ElectionsView(SysadminView):
                 'election_state': election_state,
                 'colleges': colleges,
                 'batches': batches,
-                'audits': audits,
+                'audits': paginated_audits,
+                'open_audit': audit,
             }
         else:
             # Show the eligible batches when the elections are on
@@ -176,13 +180,17 @@ class ElectionsView(SysadminView):
                 'college_batch_dict': college_batch_dict,
                 'election_state': election_state,
                 'colleges': colleges,
-                'audits': audits,
+                'audits': paginated_audits,
+                'open_audit': audit,
             }
         
         return context
 
     def get(self, request):
-        context = self.get_context()
+        page = request.GET.get('page', False)
+        audit = request.GET.get('audit', False)
+
+        context = self.get_context(page, audit != False)
 
         return render(request, self.template_name, context)
 
@@ -274,11 +282,19 @@ class ElectionsView(SysadminView):
                                            'The elections weren\'t started because there were no batches selected at'
                                            ' all.')
 
-                context = self.get_context()
+                context = self.get_context(1, False)
 
                 return render(request, self.template_name, context)
 
             elif form_type == 'end-elections':
+                if self.is_votes_empty():
+                    # If there no votes then don't end the elections
+                    messages.error(request,
+                                   'There aren\'t any votes yet.')
+
+                    context = self.get_context(1, False)
+
+                    return render(request, self.template_name, context)
                 # If the elections have already ended, it can't be ended again!
                 if election_state == ElectionState.ONGOING.value or election_state == ElectionState.PAUSED.value:
                     # Only continue if the re-authentication password indeed matches the password of the current
@@ -301,7 +317,7 @@ class ElectionsView(SysadminView):
                 else:
                     messages.error(request, 'The elections have already been ended.')
 
-                context = self.get_context()
+                context = self.get_context(1, False)
 
                 return render(request, self.template_name, context)
 
@@ -310,7 +326,7 @@ class ElectionsView(SysadminView):
                 if election_state != ElectionState.FINISHED.value:
                     messages.error(request, 'You may not archive while the elections are not yet finished.')
 
-                    context = self.get_context()
+                    context = self.get_context(1, False)
 
                     return render(request, self.template_name, context)
                 elif self.is_votes_empty():
@@ -318,7 +334,7 @@ class ElectionsView(SysadminView):
                     messages.error(request,
                                    'There aren\'t any election results to archive yet.')
 
-                    context = self.get_context()
+                    context = self.get_context(1, False)
 
                     return render(request, self.template_name, context)
                 else:
@@ -333,7 +349,7 @@ class ElectionsView(SysadminView):
                                        'The election results weren\'t archived because the password was incorrect. '
                                        'Try again.')
 
-                        context = self.get_context()
+                        context = self.get_context(1, False)
 
                         return render(request, self.template_name, context)
                     else:
@@ -544,7 +560,7 @@ class ElectionsView(SysadminView):
                 else:
                     messages.error(request, 'The elections are not currently ongoing.')
 
-                context = self.get_context()
+                context = self.get_context(1, False)
 
                 return render(request, self.template_name, context)
 
@@ -568,12 +584,18 @@ class ElectionsView(SysadminView):
                 else:
                     messages.error(request, 'The elections are not currently paused.')
 
-                context = self.get_context()
+                context = self.get_context(1, False)
 
                 return render(request, self.template_name, context)
 
             elif form_type == "unblock-results":
-                # If the elections have already ended, it can't be ended again!
+                if self.is_votes_empty():
+                    messages.error(request,
+                                   'There aren\'t any votes.')
+
+                    context = self.get_context(1, False)
+
+                    return render(request, self.template_name, context)
                 if election_state == ElectionState.BLOCKED.value:
                     # Only continue if the re-authentication password indeed matches the password of the current
                     # COMELEC officer
@@ -592,7 +614,7 @@ class ElectionsView(SysadminView):
                 else:
                     messages.error(request, 'The elections are not yet over.')
 
-                context = self.get_context()
+                context = self.get_context(1, False)
 
                 return render(request, self.template_name, context)
             
@@ -601,7 +623,7 @@ class ElectionsView(SysadminView):
                 # message
                 messages.error(request, 'Invalid request.')
 
-                context = self.get_context()
+                context = self.get_context(1, False)
 
                 return render(request, self.template_name, context)
 

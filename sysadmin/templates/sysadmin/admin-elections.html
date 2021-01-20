@@ -8,9 +8,11 @@
     <link rel="stylesheet" type="text/css" href="{% static 'passcode/css/components/officer.css' %}"/>
     <link rel="stylesheet" type="text/css" href="{% static 'passcode/css/components/officer-results.css' %}"/>
     <link rel="stylesheet" type="text/css" href="{% static 'sysadmin/css/components/admin.css' %}"/>
+    <link href="{% static 'sysadmin/css/components/election-controls.css' %}" rel="stylesheet" type="text/css" />
 
     <script src="{% static 'passcode/js/Chart.min.js' %}"></script>
     <script src="{% static 'sysadmin/js/elections.js' %}"></script>
+    <script src="{% static 'sysadmin/js/election_modal.js' %}" type="text/javascript"></script>
 
 </head>
 <body {% if identifier %}onload="drawChart('{{ vote_results_json|escapejs }}')" {% endif %}>
@@ -34,10 +36,10 @@
 
 <!-- TABS BUTTONS TO TRAVERSE THE DIFF SECTIONS -->
 <div id="tab-buttons-container">
-    <button class="tab-buttons active" onclick="openTab(event, 'Controls')" id="tab-controls">Election Control</button>
-    <button class="tab-buttons" onclick="openTab(event, 'Unblock')" id="tab-archive">Unblock Results</button>
-    <button class="tab-buttons" onclick="openTab(event, 'Archive')" id="tab-archive">Archive all results</button>
-    <button class="tab-buttons" onclick="openTab(event, 'Audit')" id="tab-archive">Check Audits</button>
+    <button class="tab-buttons {% if not open_audit %}active{% endif %}" onclick="openTab(event, 'Controls')" id="tab-controls">Election Control</button>
+    <!-- <button class="tab-buttons" onclick="openTab(event, 'Unblock')" id="tab-archive">Unblock Results</button>
+    <button class="tab-buttons" onclick="openTab(event, 'Archive')" id="tab-archive">Archive all results</button> -->
+    <button class="tab-buttons {% if open_audit %}active{% endif %}" onclick="openTab(event, 'Audit')" id="tab-archive">Check Audits</button>
 </div>
 
 <!-- CONTAINER WHERE TABS WILL OCCUPY -->
@@ -52,14 +54,14 @@
         </div>
     {% endif %}
 
-    <div id="Controls" class="tab-content">
-        {% if election_state == 'finished' or election_state == 'blocked' %}
+    <div id="Controls" class="tab-content" style="{% if open_audit %}display: none{% endif %}">
+        <!-- {% if election_state == 'finished' or election_state == 'blocked' %}
             <img id="stop" src="{% static 'passcode/assets/svg/stop.svg' %}">
             <header>Woah there!</header>
             <div class="prohibited">
                 You may not start any elections until the results are archived.
             </div>
-        {% else %}
+        {% else %} -->
             <div class="controls-container">
                 <form action="" method="POST">
                     {% csrf_token %}
@@ -108,41 +110,52 @@
                             {% endif %}
                         </div>
                     {% endfor %}
-                    {% if not election_state or election_state == 'archived' or election_state == 'ongoing' or election_state == 'paused' %}
-                        <div class="controls-instruction">
-                            {% if not election_state or election_state == 'archived' %}
-                                Once you're done, <b>reenter your password</b>, then click the <b>start
-                                elections</b> button to commence the elections.
-                                <br>
-                            {% else %}
-                                Reenter your password, then click the <b>stop elections</b> button to end the elections.
-                                Only stop the elections when you're sure that you will, because this cannot be undone.
-                            {% endif %}
+                    <div class="controls-instruction">
+                            <b>Reenter your password</b>, then click the <b>open 
+                            controls </b> button to see your options.
+                    </div>
+                    <div class="controls">
+                        <label class="info-label" for="reauth">Reenter your password</label>
+                        <br>
+                        <input id="reauth" class="password-reauth" type="password" name="reauth" required="required">
+                        <br>
+                        <button id="open_controls" type="button" class="confirm button" onclick="showControls()">Submit Password</button>
+                    </div>
+                    <div id="election-modal">
+                        <div id="election-controls">
+                            <div class="controls-header">Election Controls</div>
+                            <div id="controls-confirm" class="clearfix">
+                                <button type="button" id="close" class="control-cancel" onclick="closeModal(event)">Cancel</button>
+                                {% if election_state == "finished" %}
+                                    <input type="submit" id="archive" class="control-confirm" value="Archive Elections" onclick="setState('archive')"/>
+                                {% endif %}
+                                {% if election_state == "blocked" %}
+                                    <input type="submit" id="unblock" class="control-confirm" value="Unblock Elections" onclick="setState('unblock')"/>
+                                {% endif %}
+                                {% if election_state == "ongoing" or election_state == "paused" %}
+                                    <input type="submit" id="end" class="control-confirm" value="End Elections" onclick="setState('end')"/>
+                                {% endif %}
+                                {% if election_state == "paused" %}
+                                    <input type="submit" id="resume" class="control-confirm" value="Resume Elections" onclick="setState('resume')"/>
+                                {% endif %}
+                                {% if election_state == "ongoing" %}
+                                    <input type="submit" id="pause" class="control-confirm" value="Pause Elections" onclick="setState('pause')"/>
+                                {% endif %}
+                                {% if not election_state or election_state == "archived" %}
+                                    <input type="submit" id="start" class="control-confirm" value="Start Elections" onclick="setState('start')"/>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="controls">
-                            <label class="info-label" for="reauth">Reenter your password</label>
-                            <br>
-                            <input id="reauth" class="password-reauth" type="password" name="reauth" required="required">
-                            <br>
-                            <input class="button {% if not election_state or election_state == 'archived' %}confirm{% else %}confirm-negative{% endif %}"
-                                    type="submit"
-                                    value="{% if not election_state or election_state == 'archived' %}Start elections{% else %}Stop elections{% endif %}">
-                            {% if election_state == 'ongoing' or election_state == 'paused' %}
-                                <input class="button {% if election_state == 'paused' %}confirm{% else %}confirm-negative{% endif %}"
-                                        type="submit" onclick="pausePlay('{{ election_state }}')"
-                                        value="{% if election_state == 'paused' %}Resume elections{% else %}Pause elections{% endif %}">
-                            {% endif %}
-                        </div>
-                    {% endif %}
+                    </div>
                 </form>
             </div>
-        {% endif %}
+        <!-- {% endif %} -->
         <div id="logo">
             <img width=500 height=50 src="{% static 'passcode/assets/svg/org-logos.svg' %}">
         </div>
     </div>
 
-    <div id="Archive" class="tab-content" style="display: none">
+    <!-- <div id="Archive" class="tab-content" style="display: none">
         {% if election_state != 'finished' %}
             <img id="stop" src="{% static 'passcode/assets/svg/stop.svg' %}">
             <header>Woah there!</header>
@@ -208,9 +221,9 @@
         <div id="logo">
             <img width=500 height=50 src="{% static 'passcode/assets/svg/org-logos.svg' %}">
         </div>
-    </div>
+    </div> -->
 
-    <div id="Audit" class="tab-content" style="display: none">
+    <div id="Audit" class="tab-content" style="{% if not open_audit %}display: none{% endif %}">
         {% if audits %}
             <div id="table-container">
                 <div class="table-row row-0">
@@ -219,22 +232,43 @@
                 </div>
 
                 <!-- TEMPLATES FOR DATA INSERTION. NOTE THAT THERE IS A "row-1" AND "row-2"  FOR THEIR ALTERNATING COLORS -->
-                {% for audit in audits.0 %}
+                {% for audit in audits %}
                     <div class="table-row {% cycle 'row-1' 'row-2' %}">
                         <div class="col-ID">{{ audit.0 }}</div>
                         <div class="col-TS">{{ audit.1 }}</div>
                     </div>
                 {% endfor %}
-            </div>
-        {% else %}
-            <header>Oops!</header>
-            <div class="prohibited">
-                No one has voted yet.
-            </div>
-        {% endif %}
 
-        <div id="logo">
-            <img width=500 height=50 src="{% static 'passcode/assets/svg/org-logos.svg' %}">
+                <div class="pagination">
+                    <span class="step-links">
+                        {% if audits.has_previous %}
+                        <a href="?page=1&audit=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">&laquo;
+                            first</a>
+                        <a
+                            href="?page={{ audits.previous_page_number }}&audit=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">previous</a>
+                        {% endif %}
+                        <span class="current">Page {{ audits.number }} of {{ audits.paginator.num_pages }}.</span>
+    
+                        {% if audits.has_next %}
+                        <a
+                            href="?page={{ audits.next_page_number }}&audit=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">next</a>
+                        <a
+                            href="?page={{ audits.paginator.num_pages }}&audit=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">last
+                            &raquo;</a>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% else %}
+                <header>Oops!</header>
+                <div class="prohibited">
+                    No one has voted yet.
+                </div>
+            {% endif %}
+
+            <div id="logo">
+                <img width=500 height=50 src="{% static 'passcode/assets/svg/org-logos.svg' %}">
+            </div>
         </div>
     </div>
 </div>
