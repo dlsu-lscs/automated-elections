@@ -241,7 +241,10 @@ class VoteView(UserPassesTestMixin, View):
 
             if polls is not False and len(polls) > 0:
                 for poll in polls:
-                    poll_votes.append((poll, request.POST.get(poll)[request.POST.get(poll).rfind('-')+1:],))
+                    if (request.POST.get(poll) == None):
+                        poll_votes.append((poll, False,))
+                    else:
+                        poll_votes.append((poll, request.POST.get(poll)[request.POST.get(poll).rfind('-')+1:],))
 
             # Proceed only when there are no duplicate votes and positions
             if self.contains_duplicates(votes) and self.contains_duplicates(poll_votes):

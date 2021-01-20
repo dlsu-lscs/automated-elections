@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 import environ
+import PrimaryReplicaRouter from dbrouter
 
 env = environ.Env()
 # reading .env file
@@ -66,8 +67,7 @@ ROOT_URLCONF = 'autoelect.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -86,15 +86,34 @@ WSGI_APPLICATION = 'autoelect.wsgi.application'
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 DATABASES = {
+    # 'default': {},
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'election_db1',
-        'USER': 'election_user',
-        'PASSWORD': 'password',
-        'HOST': '127.0.0.1',
-        'PORT': '5432'
-    }
+        'NAME': env('DATABASE_PRIMARY'),
+        'USER': env('DATABASE_USER'),
+        'PASSWORD': env('DATABASE_PASSWORD'),
+        'HOST': env('DATABASE_HOST'),
+        'PORT': env('DATABASE_PORT')
+    },
+    'replica1': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DATABASE_REPLICA') + '1',
+        'USER': env('DATABASE_USER'),
+        'PASSWORD': env('DATABASE_PASSWORD'),
+        'HOST': env('DATABASE_HOST'),
+        'PORT': env('DATABASE_PORT')
+    },
+    'replica2': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DATABASE_REPLICA') + '2',
+        'USER': env('DATABASE_USER'),
+        'PASSWORD': env('DATABASE_PASSWORD'),
+        'HOST': env('DATABASE_HOST'),
+        'PORT': env('DATABASE_PORT')
+    },
 }
+
+DATABASE_ROUTERS = [ os.path.join(BASE_DIR, 'autoelect/dbrouter.py') ]
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
@@ -140,13 +159,9 @@ LOGIN_REDIRECT_URL = '/'
 
 # Email settings
 EMAIL_HOST = env('EMAIL_HOST')
-
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-
 EMAIL_PORT = int(env('EMAIL_PORT'))
-
 EMAIL_USE_TLS = True
 
 # Session expiry settings

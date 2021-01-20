@@ -539,23 +539,41 @@ class ResultsView(OfficerView):
 
             polls = Poll.objects.all().order_by('name')
 
+            # QUERY FOR TOTAL VOTE
+            TOTAL_STUDENTS = ("""
+                SELECT
+                    COUNT(vv.id) AS students
+                FROM
+                    vote_voter vv
+                WHERE
+                    vv.eligibility_status;
+            """)
+
+            total_student = 0
+
+            with connection.cursor() as cursor:
+                cursor.execute(TOTAL_STUDENTS)
+
+                total_student = cursor.fetchall()[0][0]
+
             if query is not False:
                 # Count the votes of all candidates by position
+                # TODO: Add a check
                 TOTAL_VOTES_QUERY = ("""
                     WITH all_candidates AS (
                     	SELECT
-                    		c.id AS 'CandidateID',
-                    		c.position_id AS 'PositionID',
-                    		IFNULL(vs.position_id, NULL) AS 'HasBeenVoted'
+                    		c.id AS candidate_id,
+                    		c.position_id AS position_id,
+                    		COALESCE(vs.position_id, NULL)  AS has_been_voted
                     	FROM
                     		vote_candidate c
                     	LEFT JOIN
-                    		vote_voteset vs ON c.id = vs.candidate_id
+                    		vote_voteset vs                 ON c.id = vs.candidate_id
                     	UNION ALL
                     	SELECT
-                    		vs.candidate_id AS 'CandidateID',
-                    		vs.position_id AS 'PositionID',
-                    		IFNULL(vs.position_id, NULL) AS 'HasBeenVoted'
+                    		vs.candidate_id                 AS candidate_id,
+                    		vs.position_id                  AS position_id,
+                    		COALESCE(vs.position_id, NULL)  AS has_been_voted
                     	FROM
                     		vote_voteset vs
                     	WHERE
@@ -563,14 +581,14 @@ class ResultsView(OfficerView):
                     ),
                     raw_count_position AS (
                     	SELECT
-                    		bp.name AS 'Position',
-                    		u.name AS 'Unit',
-                    		ac.'CandidateID' AS 'CandidateID',
-                    		COUNT(ac.'HasBeenVoted') AS 'Votes'
+                    		bp.name                     AS position,
+                    		u.name                      AS unit,
+                    		ac.candidate_id             AS candidate_id,
+                    		COUNT(ac.has_been_voted)    AS votes
                     	FROM
                     		all_candidates ac
                     	LEFT JOIN
-                    		vote_position p ON ac.'PositionID' = p.id
+                    		vote_position p ON ac.position_id = p.id
                     	LEFT JOIN
                     		vote_baseposition bp ON p.base_position_id = bp.id
                     	LEFT JOIN
@@ -578,19 +596,19 @@ class ResultsView(OfficerView):
                     	WHERE
                     		p.identifier = %s
                     	GROUP BY
-                    		ac.'PositionID', ac.'CandidateID'
+                    		bp.name, u.name, ac.position_id, ac.candidate_id
                     ),
                     candidate_name AS (
                     	SELECT
-                    		rcp.'Position',
-                    		rcp.'Unit',
-                    		IFNULL(u.first_name || ' ' || u.last_name, '(abstained)') AS 'Candidate',
-                    		p.name AS 'Party',
-                    		rcp.'Votes'
+                    		rcp.position,
+                    		rcp.unit,
+                    		COALESCE(u.first_name || ' ' || u.last_name, '(abstained)') AS candidate,
+                    		p.name AS party,
+                    		rcp.votes
                     	FROM
                     		raw_count_position rcp
                     	LEFT JOIN
-                    		vote_candidate c ON rcp.'CandidateID' = c.id
+                    		vote_candidate c ON rcp.candidate_id = c.id
                     	LEFT JOIN
                     		vote_voter v ON c.voter_id = v.id
                     	LEFT JOIN
@@ -600,30 +618,53 @@ class ResultsView(OfficerView):
                     ),
                     party_name AS (
                     	SELECT
-                    		cn.'Position' AS 'Position',
-                    		cn.'Unit' AS 'Unit',
-                    		cn.'Candidate' AS 'Candidate',
-                    		CASE cn.'Candidate'
+                    		cn.position AS position,
+                    		cn.unit AS unit,
+                    		cn.candidate AS candidate,
+                    		CASE cn.candidate
                     			WHEN '(abstained)' THEN '(abstained)'
-                    			ELSE COALESCE(cn.'Party', 'Independent')
-                    		END AS 'Party',
-                    		cn.'Votes' AS 'Votes'
+                    			ELSE COALESCE(cn.party, 'Independent')
+                    		END AS party,
+                    		cn.votes AS votes
                     	FROM
                     		candidate_name cn
+                    ),
+                    vote_position AS (
+                        SELECT
+                            pn2.position    AS position,
+                            pn2.unit        AS unit,
+                            SUM(pn2.votes)  AS votes
+                        FROM 
+                            party_name pn2
+                        GROUP BY
+                            pn2.position,
+                            pn2.unit
                     )
-                    SELECT
-                    	pn.'Position' AS 'Position',
-                    	pn.'Unit' AS 'Unit',
-                    	pn.'Candidate' AS 'Candidate',
-                    	pn.'Party' AS 'Party',
-                    	pn.'Votes' AS 'Votes'
-                    FROM
-                    	party_name pn
+                    SELECT  *
+                    FROM    ((
+                        SELECT
+                            pn.position     AS position,
+                            pn.unit         AS unit,
+                            pn.candidate    AS candidate,
+                            pn.party        AS party,
+                            pn.votes        AS votes
+                        FROM
+                            party_name pn
+                    ) UNION (
+                        SELECT
+                            vp.position     AS position,
+                            vp.unit         AS unit,
+                            NULL            AS candidate,
+                            NULL            AS party,
+                            %s - vp.votes   AS votes
+                        FROM
+                            vote_position vp
+                    )) final
                     ORDER BY
-                    	pn.'Position',
-                    	pn.'Unit',
-                    	pn.'Votes' DESC,
-                    	pn.'Candidate';
+                        position,
+                        unit,
+                        votes DESC,
+                        candidate;
                 """)
 
                 # Correctly format the query
@@ -632,7 +673,7 @@ class ResultsView(OfficerView):
                 vote_results = {}
 
                 with connection.cursor() as cursor:
-                    cursor.execute(TOTAL_VOTES_QUERY, [query_formatted])
+                    cursor.execute(TOTAL_VOTES_QUERY, [ query_formatted, total_student ])
 
                     vote_results[query] = cursor.fetchall()
 
@@ -642,7 +683,7 @@ class ResultsView(OfficerView):
                 for result in vote_results[query]:
                     print(result)
 
-                    vote_results_json[result[2]] = result[4]
+                    vote_results_json[str(result[2])] = int(result[4])
 
                 vote_results_json = json.dumps(vote_results_json)
 
@@ -650,17 +691,28 @@ class ResultsView(OfficerView):
                 # Count the votes of all candidates by position
                 TOTAL_POLL_VOTES_QUERY = ("""
                     SELECT
-                       p.'name' AS 'PollQuestion',
-                       SUM((CASE WHEN ps.'answer' = 'yes' AND p.'identifier' = %s THEN 1 ELSE 0 END)) AS 'AnsweredYes',
-                       SUM((CASE WHEN ps.'answer' = 'no' AND p.'identifier' = %s THEN 1 ELSE 0 END)) AS 'AnsweredNo'
+                        p.name AS poll_question,
+                        SUM(
+                            CASE
+                                WHEN ps.answer = 'yes' AND p.identifier = %s THEN 1
+                                ELSE 0
+                            END
+                        ) AS answered_yes,
+                        SUM(
+                            CASE
+                                WHEN ps.answer = 'no' AND p.identifier = %s THEN 1
+                                ELSE 0 END
+                            ) AS answered_no
                     FROM
-                       vote_pollset ps
+                        vote_pollset ps
                     LEFT JOIN
-                       vote_poll p
+                        vote_poll p
                     ON
-                       ps.'poll_id' = p.'id'
+                        ps.poll_id = p.id
                     AND
-                       p.'identifier' = %s;
+                        p.identifier = %s
+                    GROUP BY
+                        p.name;
                 """)
 
                 # Correctly format the query
@@ -695,6 +747,7 @@ class ResultsView(OfficerView):
                 'vote_results': vote_results if query is not False else False,
                 'vote_results_json': vote_results_json if query is not False else False,
                 'identifier': query,
+                'total_student': total_student
             }
         else:
             # Show the eligible batches when the elections are on
@@ -745,7 +798,7 @@ class ResultsView(OfficerView):
                 	FROM
                 		vote_vote v12
                 	WHERE
-                		DATE(v12.timestamp) <= DATE(v12.timestamp) + interval '12 hours'
+                		v12.timestamp <= DATE(v12.timestamp) + interval '12 hours'
                 	GROUP BY
                 		v12.timestamp,
                 		SUBSTR(v12.voter_id_number, 0, 4)
@@ -758,7 +811,7 @@ class ResultsView(OfficerView):
                 	FROM
                 		vote_vote v15
                 	WHERE
-                		DATE(v15.timestamp) <= DATE(v15.timestamp) + interval '15 hours'
+                		v15.timestamp <= DATE(v15.timestamp) + interval '15 hours'
                 	GROUP BY
                 		DATE(v15.timestamp),
                 		SUBSTR(v15.voter_id_number, 0, 4)
@@ -815,6 +868,8 @@ class ResultsView(OfficerView):
 
                 batch_results.append(cursor.fetchall())
 
+            print(batch_results)
+
             # Get the eligible colleges
             eligible_colleges = ElectionStatus.objects.values('college').distinct()
             eligible_colleges = [College.objects.get(id=eligible_college['college']) for eligible_college in
@@ -827,79 +882,82 @@ class ResultsView(OfficerView):
                     voter_college=eligible_college.name).count()
 
             # Votes per day per college per batch
-            COLLEGE_BATCH_QUERY = (
-                "WITH votes_12 AS (\n"
-                "	SELECT\n"
-                "		DATE(v12.timestamp) AS 'Date12',\n"
-                "		SUBSTR(v12.voter_id_number, 0, 4) AS 'Batch12',\n"
-                "		COUNT(v12.id) AS 'Count12'\n"
-                "	FROM\n"
-                "		vote_vote v12\n"
-                "	WHERE\n"
-                "		v12.timestamp <= DATETIME(v12.timestamp, 'start of day', '+12 hours')\n"
-                "		AND v12.voter_college = %s\n"
-                "	GROUP BY\n"
-                "		DATE(v12.timestamp),\n"
-                "		SUBSTR(v12.voter_id_number, 0, 4)\n"
-                "),\n"
-                "votes_15 AS (\n"
-                "	SELECT\n"
-                "		DATE(v15.timestamp) AS 'Date15',\n"
-                "		SUBSTR(v15.voter_id_number, 0, 4) AS 'Batch15',\n"
-                "		COUNT(v15.id) AS 'Count15'\n"
-                "	FROM\n"
-                "		vote_vote v15\n"
-                "	WHERE\n"
-                "		v15.timestamp <= DATETIME(v15.timestamp, 'start of day', '+15 hours')\n"
-                "		AND v15.voter_college = %s\n"
-                "	GROUP BY\n"
-                "		DATE(v15.timestamp),\n"
-                "		SUBSTR(v15.voter_id_number, 0, 4)\n"
-                "),\n"
-                "votes_18 AS (\n"
-                "	SELECT\n"
-                "		DATE(v18.timestamp) AS 'Date18',\n"
-                "		SUBSTR(v18.voter_id_number, 0, 4) AS 'Batch18',\n"
-                "		COUNT(v18.id) AS 'Count18'\n"
-                "	FROM\n"
-                "		vote_vote v18\n"
-                "	WHERE\n"
-                "		v18.timestamp <= DATETIME(v18.timestamp, 'start of day', '+18 hours')\n"
-                "		AND v18.voter_college = %s\n"
-                "	GROUP BY\n"
-                "		DATE(v18.timestamp),\n"
-                "		SUBSTR(v18.voter_id_number, 0, 4)\n"
-                ")\n"
-                "SELECT\n"
-                "	DATE(v.timestamp) AS 'Date',\n"
-                "	SUBSTR(v.voter_id_number, 0, 4) AS 'Batch',\n"
-                "	COUNT(v.id) 'Total Count',\n"
-                "	IFNULL(votes_12.'Count12', 0) AS 'As of 12 nn',\n"
-                "	IFNULL(votes_15.'Count15', 0) AS 'As of 3 pm',\n"
-                "	IFNULL(votes_18.'Count18', 0) AS 'As of 6 pm'\n"
-                "FROM\n"
-                "	vote_vote v\n"
-                "LEFT JOIN\n"
-                "	votes_12 ON\n"
-                "		DATE(v.timestamp) = votes_12.'Date12'\n"
-                "		AND SUBSTR(v.voter_id_number, 0, 4) = votes_12.'Batch12'\n"
-                "LEFT JOIN\n"
-                "	votes_15 ON\n"
-                "		DATE(v.timestamp) = votes_15.'Date15'\n"
-                "		AND SUBSTR(v.voter_id_number, 0, 4) = votes_15.'Batch15'\n"
-                "LEFT JOIN\n"
-                "	votes_18 ON\n"
-                "		DATE(v.timestamp) = votes_18.'Date18'\n"
-                "		AND SUBSTR(v.voter_id_number, 0, 4) = votes_18.'Batch18'\n"
-                "WHERE\n"
-                "	v.voter_college = %s\n"
-                "GROUP BY\n"
-                "	DATE(v.timestamp),\n"
-                "	SUBSTR(v.voter_id_number, 0, 4)\n"
-                "ORDER BY\n"
-                "   DATE(v.timestamp) DESC,\n"
-                "   SUBSTR(v.voter_id_number, 0, 4) ASC\n"
-            )
+            COLLEGE_BATCH_QUERY = ("""
+                WITH votes_12 AS (
+                	SELECT
+                		DATE(v12.timestamp) AS date12,
+                		SUBSTR(v12.voter_id_number, 0, 4) AS batch12,
+                		COUNT(v12.id) AS count12
+                	FROM
+                		vote_vote v12
+                	WHERE
+                		v12.timestamp <= DATE(v12.timestamp) + interval '12 hours'
+                		AND v12.voter_college = %s
+                	GROUP BY
+                		DATE(v12.timestamp),
+                		SUBSTR(v12.voter_id_number, 0, 4)
+                ),
+                votes_15 AS (
+                	SELECT
+                		DATE(v15.timestamp) AS date15,
+                		SUBSTR(v15.voter_id_number, 0, 4) AS batch15,
+                		COUNT(v15.id) AS count15
+                	FROM
+                		vote_vote v15
+                	WHERE
+                		v15.timestamp <= DATE(v15.timestamp) + interval '15 hours'
+                		AND v15.voter_college = %s
+                	GROUP BY
+                		DATE(v15.timestamp),
+                		SUBSTR(v15.voter_id_number, 0, 4)
+                ),
+                votes_18 AS (
+                	SELECT
+                		DATE(v18.timestamp) AS date18,
+                		SUBSTR(v18.voter_id_number, 0, 4) AS batch18,
+                		COUNT(v18.id) AS count18
+                	FROM
+                		vote_vote v18
+                	WHERE
+                		v18.timestamp <= DATE(v18.timestamp) + interval '18 hours'
+                		AND v18.voter_college = %s
+                	GROUP BY
+                		DATE(v18.timestamp),
+                		SUBSTR(v18.voter_id_number, 0, 4)
+                )
+                SELECT
+                	DATE(v.timestamp) AS date,
+                	SUBSTR(v.voter_id_number, 0, 4) AS batch,
+                	COUNT(v.id) total_count,
+                	COALESCE(votes_12.count12, 0) AS as_of_12_nn,
+                	COALESCE(votes_15.count15, 0) AS as_of_3_pm,
+                	COALESCE(votes_18.count18, 0) AS as_of_6_pm
+                FROM
+                	vote_vote v
+                LEFT JOIN
+                	votes_12 ON
+                		DATE(v.timestamp) = votes_12.date12
+                		AND SUBSTR(v.voter_id_number, 0, 4) = votes_12.batch12
+                LEFT JOIN
+                	votes_15 ON
+                		DATE(v.timestamp) = votes_15.date15
+                		AND SUBSTR(v.voter_id_number, 0, 4) = votes_15.batch15
+                LEFT JOIN
+                	votes_18 ON
+                		DATE(v.timestamp) = votes_18.date18
+                		AND SUBSTR(v.voter_id_number, 0, 4) = votes_18.batch18
+                WHERE
+                	v.voter_college = %s
+                GROUP BY
+                	DATE(v.timestamp),
+                	SUBSTR(v.voter_id_number, 0, 4),
+                    votes_12.count12,
+                    votes_15.count15,
+                    votes_18.count18
+                ORDER BY
+                   DATE(v.timestamp) DESC,
+                   SUBSTR(v.voter_id_number, 0, 4) ASC;
+            """)
 
             college_batch_results = {}
 
