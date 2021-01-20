@@ -121,23 +121,23 @@ class ElectionsView(SysadminView):
 
         audits = []
 
-        AUDITS_QUERY = (
-            "SELECT\n"
-            "    a.username AS \"ID Number\",\n"
-            "    x.ts AS \"Timestamp\"\n"
-            "FROM\n"
-            "    xaction AS x\n"
-            "INNER JOIN\n"
-            "    auth_user AS a\n"
-            "ON\n"
-            "    x.user_id=a.id\n"
-            "WHERE\n"
-            "    x.entity_id=1 AND x.xaction_type='I'\n"
-            "ORDER BY\n"
-            "    x.id DESC\n"
-            "LIMIT\n"
-            "    100"
-        )
+        AUDITS_QUERY = ("""
+            SELECT
+                a.username AS \"ID Number\",
+                x.ts AS \"Timestamp\"
+            FROM
+                xaction AS x
+            INNER JOIN
+                auth_user AS a
+            ON
+                x.user_id=a.id
+            WHERE
+                x.entity_id=1 AND x.xaction_type='I'
+            ORDER BY
+                x.id DESC
+            LIMIT
+                1;
+        """)
 
         with connection.cursor() as cursor:
             cursor.execute(AUDITS_QUERY)
@@ -355,103 +355,104 @@ class ElectionsView(SysadminView):
                     else:
                         with transaction.atomic():
                             # Count the votes of all candidates
-                            TOTAL_VOTES_QUERY = (
-                                "WITH all_candidates AS (\n"
-                                "	SELECT\n"
-                                "		c.id AS 'CandidateID',\n"
-                                "		c.position_id AS 'PositionID',\n"
-                                "		IFNULL(vs.position_id, NULL) AS 'HasBeenVoted'\n"
-                                "	FROM\n"
-                                "		vote_candidate c\n"
-                                "	LEFT JOIN\n"
-                                "		vote_voteset vs ON c.id = vs.candidate_id\n"
-                                "	UNION ALL\n"
-                                "	SELECT\n"
-                                "		vs.candidate_id AS 'CandidateID',\n"
-                                "		vs.position_id AS 'PositionID',\n"
-                                "		IFNULL(vs.position_id, NULL) AS 'HasBeenVoted'\n"
-                                "	FROM\n"
-                                "		vote_voteset vs\n"
-                                "	WHERE\n"
-                                "		vs.candidate_id IS NULL\n"
-                                "),\n"
-                                "raw_count_position AS (\n"
-                                "	SELECT\n"
-                                "		bp.name AS 'Position',\n"
-                                "		u.name AS 'Unit',\n"
-                                "		ac.'CandidateID' AS 'CandidateID',\n"
-                                "		COUNT(ac.'HasBeenVoted') AS 'Votes'\n"
-                                "	FROM\n"
-                                "		all_candidates ac\n"
-                                "	LEFT JOIN\n"
-                                "		vote_position p ON ac.'PositionID' = p.id\n"
-                                "	LEFT JOIN\n"
-                                "		vote_baseposition bp ON p.base_position_id = bp.id\n"
-                                "	LEFT JOIN\n"
-                                "		vote_unit u ON p.unit_id = u.id\n"
-                                "	GROUP BY\n"
-                                "		ac.'PositionID', ac.'CandidateID'\n"
-                                "),\n"
-                                "candidate_name AS (\n"
-                                "	SELECT\n"
-                                "		rcp.'Position',\n"
-                                "		rcp.'Unit',\n"
-                                "		IFNULL(u.first_name || ' ' || u.last_name, '(abstained)') AS 'Candidate',\n"
-                                "		p.name AS 'Party',\n"
-                                "		rcp.'Votes'\n"
-                                "	FROM\n"
-                                "		raw_count_position rcp\n"
-                                "	LEFT JOIN\n"
-                                "		vote_candidate c ON rcp.'CandidateID' = c.id\n"
-                                "	LEFT JOIN\n"
-                                "		vote_voter v ON c.voter_id = v.id\n"
-                                "	LEFT JOIN\n"
-                                "		auth_user u ON v.user_id = u.id\n"
-                                "	LEFT JOIN\n"
-                                "		vote_party p ON c.party_id = p.id\n"
-                                "),\n"
-                                "party_name AS (\n"
-                                "	SELECT\n"
-                                "		cn.'Position' AS 'Position',\n"
-                                "		cn.'Unit' AS 'Unit',\n"
-                                "		cn.'Candidate' AS 'Candidate',\n"
-                                "		CASE cn.'Candidate'\n"
-                                "			WHEN '(abstained)' THEN '(abstained)'\n"
-                                "			ELSE IFNULL(cn.'Party', 'Independent')\n"
-                                "		END AS 'Party',\n"
-                                "		cn.'Votes' AS 'Votes'\n"
-                                "	FROM\n"
-                                "		candidate_name cn\n"
-                                ")\n"
-                                "SELECT\n"
-                                "	pn.'Position' AS 'Position',\n"
-                                "	pn.'Unit' AS 'Unit',\n"
-                                "	pn.'Candidate' AS 'Candidate',\n"
-                                "	pn.'Party' AS 'Party',\n"
-                                "	pn.'Votes' AS 'Votes'\n"
-                                "FROM\n"
-                                "	party_name pn\n"
-                                "ORDER BY\n"
-                                "	pn.'Position',\n"
-                                "	pn.'Unit',\n"
-                                "	pn.'Votes' DESC,\n"
-                                "	pn.'Candidate';\n"
-                            )
+                            # TODO: Fix this
+                            TOTAL_VOTES_QUERY = ("""
+                                WITH all_candidates AS (
+                                	SELECT
+                                		c.id AS 'CandidateID',
+                                		c.position_id AS 'PositionID',
+                                		IFNULL(vs.position_id, NULL) AS 'HasBeenVoted'
+                                	FROM
+                                		vote_candidate c
+                                	LEFT JOIN
+                                		vote_voteset vs ON c.id = vs.candidate_id
+                                	UNION ALL
+                                	SELECT
+                                		vs.candidate_id AS 'CandidateID',
+                                		vs.position_id AS 'PositionID',
+                                		IFNULL(vs.position_id, NULL) AS 'HasBeenVoted'
+                                	FROM
+                                		vote_voteset vs
+                                	WHERE
+                                		vs.candidate_id IS NULL
+                                ),
+                                raw_count_position AS (
+                                	SELECT
+                                		bp.name AS 'Position',
+                                		u.name AS 'Unit',
+                                		ac.'CandidateID' AS 'CandidateID',
+                                		COUNT(ac.'HasBeenVoted') AS 'Votes'
+                                	FROM
+                                		all_candidates ac
+                                	LEFT JOIN
+                                		vote_position p ON ac.'PositionID' = p.id
+                                	LEFT JOIN
+                                		vote_baseposition bp ON p.base_position_id = bp.id
+                                	LEFT JOIN
+                                		vote_unit u ON p.unit_id = u.id
+                                	GROUP BY
+                                		ac.'PositionID', ac.'CandidateID'
+                                ),
+                                candidate_name AS (
+                                	SELECT
+                                		rcp.'Position',
+                                		rcp.'Unit',
+                                		IFNULL(u.first_name || ' ' || u.last_name, '(abstained)') AS 'Candidate',
+                                		p.name AS 'Party',
+                                		rcp.'Votes'
+                                	FROM
+                                		raw_count_position rcp
+                                	LEFT JOIN
+                                		vote_candidate c ON rcp.'CandidateID' = c.id
+                                	LEFT JOIN
+                                		vote_voter v ON c.voter_id = v.id
+                                	LEFT JOIN
+                                		auth_user u ON v.user_id = u.id
+                                	LEFT JOIN
+                                		vote_party p ON c.party_id = p.id
+                                ),
+                                party_name AS (
+                                	SELECT
+                                		cn.'Position' AS 'Position',
+                                		cn.'Unit' AS 'Unit',
+                                		cn.'Candidate' AS 'Candidate',
+                                		CASE cn.'Candidate'
+                                			WHEN '(abstained)' THEN '(abstained)'
+                                			ELSE IFNULL(cn.'Party', 'Independent')
+                                		END AS 'Party',
+                                		cn.'Votes' AS 'Votes'
+                                	FROM
+                                		candidate_name cn
+                                )
+                                SELECT
+                                	pn.'Position' AS 'Position',
+                                	pn.'Unit' AS 'Unit',
+                                	pn.'Candidate' AS 'Candidate',
+                                	pn.'Party' AS 'Party',
+                                	pn.'Votes' AS 'Votes'
+                                FROM
+                                	party_name pn
+                                ORDER BY
+                                	pn.'Position',
+                                	pn.'Unit',
+                                	pn.'Votes' DESC,
+                                	pn.'Candidate';
+                            """)
 
-                            TOTAL_POLL_VOTES_QUERY = (
-                                "SELECT\n"
-                                "   p.'name' AS 'Question',\n"
-                                "   SUM((CASE WHEN ps.'answer' = 'yes' THEN 1 ELSE 0 END)) AS 'Yes',\n"
-                                "   SUM((CASE WHEN ps.'answer' = 'no' THEN 1 ELSE 0 END)) AS 'No'\n"
-                                "FROM\n"
-                                "   vote_pollset ps\n"
-                                "LEFT JOIN\n"
-                                "   vote_poll p\n"
-                                "ON\n"
-                                "   ps.'poll_id' = p.'id'\n"
-                                "GROUP BY\n"
-                                "   p.'id';\n"
-                            )
+                            TOTAL_POLL_VOTES_QUERY = ("""
+                                SELECT
+                                   p.'name' AS 'Question',
+                                   SUM((CASE WHEN ps.'answer' = 'yes' THEN 1 ELSE 0 END)) AS 'Yes',
+                                   SUM((CASE WHEN ps.'answer' = 'no' THEN 1 ELSE 0 END)) AS 'No'
+                                FROM
+                                   vote_pollset ps
+                                LEFT JOIN
+                                   vote_poll p
+                                ON
+                                   ps.'poll_id' = p.'id'
+                                GROUP BY
+                                   p.'id';
+                            """)
 
                             vote_results = {}
                             poll_results = {}
