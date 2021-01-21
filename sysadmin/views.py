@@ -355,7 +355,6 @@ class ElectionsView(SysadminView):
                     else:
                         with transaction.atomic():
                             # Count the votes of all candidates
-                            # TODO: Fix this
                             TOTAL_VOTES_QUERY = ("""
                                 WITH all_candidates AS (
                                 	SELECT
@@ -1596,10 +1595,7 @@ class PositionView(SysadminView):
     @staticmethod
     def delete_position(position_id):
         # Retrieve the position
-        position = Position.objects.get(id=position_id)
-
-        # Get rid of that position
-        position.delete()
+        Position.objects.get(id=position_id).delete()
 
     def display_objects(self, page, query=False):
         # Show everything if the query is empty
@@ -1645,7 +1641,8 @@ class PositionView(SysadminView):
                     if position_form.is_valid():
                         with transaction.atomic():
                             # Save the form to the database if it is valid
-                            position_form.save()
+                            position = position_form.save()
+                            position.save()
 
                             messages.success(request, 'Position successfully added.')
 
@@ -1727,10 +1724,7 @@ class IssueView(SysadminView):
     @staticmethod
     def delete_issue(issue_id):
         # Retrieve the issue
-        issue = Issue.objects.get(id=issue_id)
-
-        # Get rid of that issue
-        issue.delete()
+        Issue.objects.get(id=issue_id).delete()
 
     def display_objects(self, page, query=False):
         # Show everything if the query is empty
@@ -1772,7 +1766,8 @@ class IssueView(SysadminView):
                     if issue_form.is_valid():
                         with transaction.atomic():
                             # Save the form to the database if it is valid
-                            issue_form.save()
+                            issue = issue_form.save()
+                            issue.save()
 
                             messages.success(request, 'Issue successfully added.')
 
@@ -1879,10 +1874,7 @@ class PollView(SysadminView):
     @staticmethod
     def delete_poll(poll_id):
         # Retrieve the poll
-        poll = Poll.objects.get(id=poll_id)
-
-        # Get rid of that issupolle
-        poll.delete()
+        Poll.objects.get(id=poll_id).delete()
 
     def display_objects(self, page, query=False):
         # Show everything if the query is empty
@@ -1924,7 +1916,8 @@ class PollView(SysadminView):
                     if poll_form.is_valid():
                         with transaction.atomic():
                             # Save the form to the database if it is valid
-                            poll_form.save()
+                            poll = poll_form.save()
+                            poll.save(using='default')
 
                             messages.success(request, 'Poll successfully added.')
 

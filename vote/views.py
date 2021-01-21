@@ -278,7 +278,7 @@ class VoteView(UserPassesTestMixin, View):
                         # Create a vote object to represent a single vote of a user
                         vote = Vote(voter_id_number=voter.user.username, voter_college=voter.college.name)
 
-                        vote.serial_number = '##########'
+                        vote.serial_number = '#'
                         vote.save()
 
                         # Generate its serial number
@@ -286,6 +286,9 @@ class VoteView(UserPassesTestMixin, View):
 
                         vote.serial_number = serial_number
                         vote.save()
+                        vote.save(using='vote1')
+                        vote.save(using='vote2')
+                        vote.save(using='vote3')
 
                         # Create a vote set array representing the individual votes to be saved in the database
                         actual_votes = [
@@ -302,10 +305,17 @@ class VoteView(UserPassesTestMixin, View):
 
                         # Save all votes into the database
                         for actual_vote in actual_votes:
+                            # actual_vote.save()
                             actual_vote.save()
+                            actual_vote.save(using='vote1')
+                            actual_vote.save(using='vote2')
+                            actual_vote.save(using='vote3')
 
                         for actual_poll_vote in actual_poll_votes:
                             actual_poll_vote.save()
+                            actual_poll_vote.save(using='vote1')
+                            actual_poll_vote.save(using='vote2')
+                            actual_poll_vote.save(using='vote3')
 
                         # Mark the voter as already voted
                         voter.voting_status = True

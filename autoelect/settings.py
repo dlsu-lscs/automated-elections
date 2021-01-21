@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 import environ
-import PrimaryReplicaRouter from dbrouter
 
 env = environ.Env()
 # reading .env file
@@ -86,34 +85,41 @@ WSGI_APPLICATION = 'autoelect.wsgi.application'
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {},
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': env('DATABASE_PRIMARY'),
-        'USER': env('DATABASE_USER'),
-        'PASSWORD': env('DATABASE_PASSWORD'),
+        'USER': env('DATABASE_USER_PRIMARY'),
+        'PASSWORD': env('DATABASE_PASSWORD_PRIMARY'),
         'HOST': env('DATABASE_HOST'),
         'PORT': env('DATABASE_PORT')
     },
-    'replica1': {
+    'vote1': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DATABASE_REPLICA') + '1',
-        'USER': env('DATABASE_USER'),
-        'PASSWORD': env('DATABASE_PASSWORD'),
+        'NAME': env('DATABASE_VOTE') + '1',
+        'USER': env('DATABASE_USER_VOTE1'),
+        'PASSWORD': env('DATABASE_PASSWORD_VOTE1'),
         'HOST': env('DATABASE_HOST'),
         'PORT': env('DATABASE_PORT')
     },
-    'replica2': {
+    'vote2': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DATABASE_REPLICA') + '2',
-        'USER': env('DATABASE_USER'),
-        'PASSWORD': env('DATABASE_PASSWORD'),
+        'NAME': env('DATABASE_VOTE') + '2',
+        'USER': env('DATABASE_USER_VOTE2'),
+        'PASSWORD': env('DATABASE_PASSWORD_VOTE2'),
+        'HOST': env('DATABASE_HOST'),
+        'PORT': env('DATABASE_PORT')
+    },
+    'vote3': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DATABASE_VOTE') + '3',
+        'USER': env('DATABASE_USER_VOTE3'),
+        'PASSWORD': env('DATABASE_PASSWORD_VOTE3'),
         'HOST': env('DATABASE_HOST'),
         'PORT': env('DATABASE_PORT')
     },
 }
 
-DATABASE_ROUTERS = [ os.path.join(BASE_DIR, 'autoelect/dbrouter.py') ]
+DATABASE_ROUTERS = [ 'autoelect.dbrouter.PrimaryReplicaRouter' ]
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators

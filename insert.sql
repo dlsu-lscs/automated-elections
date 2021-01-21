@@ -6,32 +6,6 @@ INSERT INTO auth_group(name) VALUES
 INSERT INTO auth_user_groups(user_id, group_id)
     VALUES (1, 1);
 
-/*
-INSERT INTO auth_group_permissions(group_id, permission_id) VALUES
-    (1, 1),
-    (1, 2),
-    (1, 3),
-    (1, 4),
-    (1, 5),
-    (1, 6),
-    (1, 7),
-    (1, 8),
-    (1, 9),
-    (1, 10),
-    (1, 11),
-    (1, 12),
-    (1, 13),
-    (1, 14),
-    (1, 15),
-    (1, 16),
-    (1, 17),
-    (1, 18),
-    (1, 19),
-    (1, 20),
-    (1, 21),
-*/
-
-
 INSERT INTO vote_college(name) VALUES
     ('CCS'),
     ('COS'),
@@ -55,8 +29,11 @@ INSERT INTO vote_baseposition(name, type) VALUES
     ('Batch President', 'Batch'),
     ('Batch Vice President', 'Batch'),
     ('LA Representative', 'Batch'),
-    ('College President', 'College'),
-    ('');
+    ('College President', 'College');
+    -- LAGUNA
+    ('Campus President', 'College'),
+    ('Campus Secretary', 'College'),
+    ('LA Representative', 'College');
 
 INSERT INTO vote_unit(batch, name, college_id) VALUES
     ('117', 'CATCH2T21', 1),
@@ -94,4 +71,5 @@ INSERT INTO vote_unit(batch, name, college_id) VALUES
     (NULL, 'BSG', 5),
     (NULL, 'CGE', 6),
     (NULL, 'SEG', 7),
+    (NULL, 'LAGUNA', 8),
     (NULL, 'Executive Board', NULL);
