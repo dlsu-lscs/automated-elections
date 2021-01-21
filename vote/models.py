@@ -3,7 +3,7 @@ import uuid
 
 from django.contrib.auth.models import User
 from django.db import models
-
+from audit_trail.history import AuditTrail, AuditManager
 from enum import Enum
 
 class College(models.Model):
@@ -143,6 +143,12 @@ class Vote(models.Model):
     serial_number = models.CharField(max_length=10, default=voter_id_number, unique=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    history = AuditTrail()
+    objects = AuditManager.as_manager()
+
+    class Meta:
+        display_format = 'Vote'
+
     def __str__(self):
         return "(" + str(self.serial_number) + ") " + str(self.voter_id_number) + " voted on " + repr(self.timestamp)
 
@@ -151,6 +157,12 @@ class VoteSet(models.Model):
     vote = models.ForeignKey(Vote, on_delete=models.CASCADE)
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, null=True)
     position = models.ForeignKey(Position, on_delete=models.CASCADE, null=True)
+
+    history = AuditTrail()
+    objects = AuditManager.as_manager()
+    
+    class Meta:
+        display_format = 'VoteSet'
 
     def __str__(self):
         return self.vote.voter_id_number + " voted for " \
@@ -176,6 +188,12 @@ class PollSet(models.Model):
     vote = models.ForeignKey(Vote, on_delete=models.CASCADE)
     poll = models.ForeignKey(Poll, on_delete=models.CASCADE, null=True)
     answer = models.CharField(max_length=7, choices=PollAnswerType.choices())
+
+    history = AuditTrail()
+    objects = AuditManager.as_manager()
+
+    class Meta:
+        display_format = 'PollSet'
 
     def __str__(self):
         return self.vote.voter_id_number + " voted for " \
