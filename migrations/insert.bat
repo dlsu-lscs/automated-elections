@@ -1,0 +1,1 @@
+psql -h localhost -p 5432 -U election_user -W -d election_primary < insert.sql
