@@ -1,0 +1,87 @@
+#header-container {
+    width: 80%;
+    height: 10%;
+    background: #36A472;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    top: 0;
+    position: fixed;
+
+    padding: 0px 10% 0px 10%;
+}
+
+#header-ballot {
+    width: 40px;
+    height: 40px;
+}
+
+a {
+    color: #C0C0C0;
+    font-weight: 500;
+    text-decoration: none;
+    margin-left: 60px;
+    cursor: pointer;
+}
+
+a:hover {
+    color: white;
+}
+
+#selected {
+    color: white;
+}
+
+.user-container-content {
+    width: 100px;
+    height: 300px;
+    display: none;
+    position: absolute;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 590px;
+    background: rgb(28, 30, 34);
+    min-width: 185px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+#user-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    margin-left: auto;
+    margin-right: 10px;
+
+}
+
+#user-container:hover .user-container-content {
+    display: block;
+    z-index: 10;
+
+}
+
+#log-out {
+    color: #fff;
+}
+
+#log-out:hover {
+    border-bottom: 1px solid white;
+}
+
+#user-icon {
+    width: 30px;
+    height: 30px;
+    margin-left: 100px;
+}
+
+#user-name {
+    color: #fff;
+    margin-left: 20px;
+    font-weight: 600;
+}
