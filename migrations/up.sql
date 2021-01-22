@@ -6,10 +6,13 @@ CREATE TABLE vote_pollset (
 );
 
 CREATE TABLE vote_vote (
-    id              SERIAL      PRIMARY KEY,
-    voter_id_number VARCHAR(8)  NOT NULL UNIQUE,
-    serial_number   VARCHAR(10) NOT NULL UNIQUE,
-    voter_college   VARCHAR(7)  NOT NULL,
+    id                  SERIAL      PRIMARY KEY,
+    serial_number       UUID        NOT NULL UNIQUE,
+    voter_id            INT         NOT NULL,
+    voter_campus_id     INT         NOT NULL,
+    voter_college_id    INT         NOT NULL,
+    voter_batch         VARCHAR(3)  NOT NULL,
+    -- voter_id_number VARCHAR(8)  NOT NULL UNIQUE,
     timestamp       TIMESTAMP   NOT NULL
 );
 

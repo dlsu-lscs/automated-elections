@@ -595,7 +595,7 @@ class ElectionsView(SysadminView):
                     messages.error(request,
                                    'There aren\'t any votes.')
 
-                    context = self.get_context(1, False)
+                    context = self.get_context(self, 1, False)
 
                     return render(request, self.template_name, context)
                 if election_state == ElectionState.BLOCKED.value:
@@ -656,9 +656,13 @@ class VotersView(SysadminView):
         eligibility_status = True if eligibility_status_name == 'Eligible' else False
 
         # Create the user given the information provided
-        user = User.objects.create_user(username=username, email=email, first_name=first_name,
-                                        last_name=last_name,
-                                        password=password)
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            password=password
+        )
 
         # Add the user to the voter group
         group = Group.objects.get(name='voter')
@@ -672,8 +676,14 @@ class VotersView(SysadminView):
         college = College.objects.get(name=college_name)
 
         # Create the voter using the created user
-        Voter.objects.create(user=user, campus=campus, college=college,
-                             voting_status=voting_status, eligibility_status=eligibility_status)
+        Voter.objects.create(
+            user=user,
+            campus=campus,
+            college=college,
+            batch=username[:3],
+            voting_status=voting_status,
+            eligibility_status=eligibility_status
+        )
 
         election_state = ResultsView.get_election_state()
 
@@ -833,9 +843,9 @@ class VotersView(SysadminView):
 
                         # Check for missing rows
                         try:
-                            voter_data_split = row_str.split(',', 4)
+                            voter_data_split = row_str.split(',', 5)
 
-                            if len(voter_data_split) != 4:
+                            if len(voter_data_split) != 5:
                                 raise ValueError
                         except ValueError:
                             messages.error(request,
@@ -847,14 +857,16 @@ class VotersView(SysadminView):
                             return render(request, self.template_name, context)
 
                         # Get specific values
-                        id_number = voter_data_split[0].strip()
-                        last_name = voter_data_split[1].strip()
-                        first_names = voter_data_split[2].strip()
-                        college = voter_data_split[3].strip()
+                        id_number   = voter_data_split[0].strip()
+                        last_name   = voter_data_split[1].strip()
+                        first_name  = voter_data_split[2].strip()
+                        college     = voter_data_split[3].strip()
+                        campus      = voter_data_split[4].strip()
 
                         # If the inputs contain invalid data, stop processing immediately
                         if User.objects.filter(username=id_number).count() > 0 \
-                                or College.objects.filter(name=college).count() == 0:
+                                or College.objects.filter(name=college).count() == 0 \
+                                or Campus.objects.filter(name=campus).count() == 0:
                             messages.error(request,
                                             'The uploaded list contained invalid voter data or voters who were already'
                                             ' added previously. No further voters were added. (Error at row ' + repr(
@@ -869,8 +881,9 @@ class VotersView(SysadminView):
                             {
                                 'id_number': id_number,
                                 'last_name': last_name,
-                                'first_names': first_names,
+                                'first_name': first_name,
                                 'college': college,
+                                'campus': campus
                             }
                         )
 
@@ -889,9 +902,10 @@ class VotersView(SysadminView):
                             with transaction.atomic():
                                 # Try to create the voter
                                 self.create_voter(
-                                    voter['first_names'],
+                                    voter['first_name'],
                                     voter['last_name'],
                                     voter['id_number'],
+                                    voter['campus'],
                                     voter['college'],
                                     voting_status_name,
                                     eligibility_status_name

@@ -541,12 +541,43 @@ class ResultsView(OfficerView):
 
             # QUERY FOR TOTAL VOTE
             TOTAL_STUDENTS = ("""
-                SELECT
-                    COUNT(vv.id) AS students
-                FROM
-                    vote_voter vv
-                WHERE
-                    vv.eligibility_status;
+                WITH population AS (
+                    SELECT
+                        vv.campus_id    AS campus,
+                        vv.college_id   AS college,
+                        vv.batch        AS batch,
+                        COUNT(vv.id)    AS population
+                    FROM
+                        vote_voter vv
+                    GROUP BY ROLLUP (
+                        vv.campus_id,
+                        vv.college_id,
+                        vv.batch
+                    )
+                    ORDER BY
+                        vv.campus_id,
+                        vv.college_id,
+                        vv.batch
+                ),
+                population_name AS (
+                    SELECT
+                        vc.name         AS campus,
+                        vco.name        AS college,
+                        p.batch         AS batch,
+                        p.population    AS population
+                    FROM
+                        population p
+                            LEFT JOIN
+                                vote_campus vc
+                            ON
+                                vc.id=p.campus
+                            LEFT JOIN
+                                vote_college vco
+                            ON
+                                vco.id=p.college
+                )
+                SELECT  *
+                FROM    population_name;
             """)
 
             total_student = 0
@@ -554,11 +585,10 @@ class ResultsView(OfficerView):
             with connection.cursor() as cursor:
                 cursor.execute(TOTAL_STUDENTS)
 
-                total_student = cursor.fetchall()[0][0]
+                total_student = cursor.fetchall()[-1][-1]
 
             if query is not False:
                 # Count the votes of all candidates by position
-                # TODO: Add a check
                 TOTAL_VOTES_QUERY = ("""
                     WITH all_candidates AS (
                     	SELECT
@@ -639,30 +669,77 @@ class ResultsView(OfficerView):
                         GROUP BY
                             pn2.position,
                             pn2.unit
+                    ),
+                    -- Gets the whole population based by campus, college, batch
+                    population AS (
+                        SELECT
+                            vv.campus_id    AS campus_id,
+                            vv.college_id   AS college_id,
+                            vv.batch        AS batch,
+                            COUNT(vv.id)    AS population
+                        FROM
+                            vote_voter vv
+                        GROUP BY ROLLUP (
+                            vv.campus_id,
+                            vv.college_id,
+                            vv.batch
+                        )
+                        ORDER BY
+                            vv.campus_id,
+                            vv.college_id,
+                            vv.batch
+                    ),
+                    -- Gets all the unit_population
+                    unit_population AS (
+                        SELECT
+                            vu.name         AS name,
+                            p.population    AS population
+                        FROM
+                            vote_unit vu
+                        JOIN
+                            party_name pn ON
+                                pn.unit = vu.name
+                        LEFT JOIN
+                            population p ON
+                                COALESCE(p.campus_id, -1) = COALESCE(vu.campus_id, -1) AND
+                                COALESCE(p.college_id, -1) = COALESCE(vu.college_id, -1) AND
+                                (
+                                    p.batch = vu.batch OR
+                                    p.batch IS NULL AND vu.college_id IS NULL
+                                )
+                    ),
+                    -- Sum of total voters
+                    total_voters AS (
+                        SELECT
+                            SUM(pn.votes)   AS total
+                        FROM
+                            party_name      pn
                     )
                     SELECT  *
-                    FROM    ((
-                        SELECT
-                            pn.position     AS position,
-                            pn.unit         AS unit,
-                            pn.candidate    AS candidate,
-                            pn.party        AS party,
-                            pn.votes        AS votes
-                        FROM
-                            party_name pn
-                    ) UNION (
-                        SELECT
-                            vp.position     AS position,
-                            vp.unit         AS unit,
-                            NULL            AS candidate,
-                            NULL            AS party,
-                            %s - vp.votes   AS votes
-                        FROM
-                            vote_position vp
-                    )) final
+                    FROM    (
+                        (
+                            SELECT
+                                pn.position     AS position,
+                                pn.unit         AS unit,
+                                pn.candidate    AS candidate,
+                                pn.party        AS party,
+                                pn.votes        AS votes
+                            FROM
+                                party_name pn
+                        ) UNION (
+                            SELECT
+                                NULL                        AS position,
+                                up.name                     AS unit,
+                                NULL                        AS candidate,
+                                NULL                        AS party,
+                                up.population - tv.total    AS votes
+                            FROM
+                                unit_population up
+                            JOIN
+                                total_voters tv ON true
+                        )
+                    ) final
                     ORDER BY
-                        position,
-                        unit,
                         votes DESC,
                         candidate;
                 """)
@@ -673,7 +750,7 @@ class ResultsView(OfficerView):
                 vote_results = {}
 
                 with connection.cursor() as cursor:
-                    cursor.execute(TOTAL_VOTES_QUERY, [ query_formatted, total_student ])
+                    cursor.execute(TOTAL_VOTES_QUERY, [ query_formatted ])
 
                     vote_results[query] = cursor.fetchall()
 
@@ -683,7 +760,8 @@ class ResultsView(OfficerView):
                 for result in vote_results[query]:
                     print(result)
 
-                    vote_results_json[str(result[2])] = int(result[4])
+                    if result[4] != None:
+                        vote_results_json[str(result[2])] = int(result[4])
 
                 vote_results_json = json.dumps(vote_results_json)
 
@@ -792,73 +870,73 @@ class ResultsView(OfficerView):
             BATCH_QUERY = ("""
                 WITH votes_12 AS (
                 	SELECT
-                		DATE(v12.timestamp) AS date12,
-                		SUBSTR(v12.voter_id_number, 0, 4) AS batch12,
-                		COUNT(v12.id) AS count12
+                		DATE(v12.timestamp)         AS date12,
+                		v12.voter_batch             AS batch12,
+                		COUNT(v12.serial_number)    AS count12
                 	FROM
                 		vote_vote v12
                 	WHERE
                 		v12.timestamp <= DATE(v12.timestamp) + interval '12 hours'
                 	GROUP BY
                 		v12.timestamp,
-                		SUBSTR(v12.voter_id_number, 0, 4)
+                		v12.voter_batch
                 ),
                 votes_15 AS (
                 	SELECT
-                		DATE(v15.timestamp) AS date15,
-                		SUBSTR(v15.voter_id_number, 0, 4) AS batch15,
-                		COUNT(v15.id) AS count15
+                		DATE(v15.timestamp)         AS date15,
+                		v15.voter_batch             AS batch15,
+                		COUNT(v15.serial_number)    AS count15
                 	FROM
                 		vote_vote v15
                 	WHERE
                 		v15.timestamp <= DATE(v15.timestamp) + interval '15 hours'
                 	GROUP BY
                 		DATE(v15.timestamp),
-                		SUBSTR(v15.voter_id_number, 0, 4)
+                		v15.voter_batch
                 ),
                 votes_18 AS (
                 	SELECT
-                		DATE(v18.timestamp) AS date18,
-                		SUBSTR(v18.voter_id_number, 0, 4) AS batch18,
-                		COUNT(v18.id) AS count18
+                		DATE(v18.timestamp)         AS date18,
+                		v18.voter_batch             AS batch18,
+                		COUNT(v18.serial_number)    AS count18
                 	FROM
                 		vote_vote v18
                 	WHERE
                 		v18.timestamp <= DATE(v18.timestamp) + interval '18 hours'
                 	GROUP BY
                 		DATE(v18.timestamp),
-                		SUBSTR(v18.voter_id_number, 0, 4)
+                		v18.voter_batch
                 )
                 SELECT
-                	DATE(v.timestamp) AS date,
-                	SUBSTR(v.voter_id_number, 0, 4) AS batch,
-                	COUNT(v.id) AS total_count,
-                	COALESCE(votes_12.count12, 0) AS as_of_12_nn,
-                	COALESCE(votes_15.count15, 0) AS as_of_3_pm,
-                	COALESCE(votes_18.count18, 0) AS as_of_6_pm
+                	DATE(v.timestamp)               AS date,
+                	v.voter_batch                   AS batch,
+                	COUNT(v.serial_number)          AS total_count,
+                	COALESCE(votes_12.count12, 0)   AS as_of_12_nn,
+                	COALESCE(votes_15.count15, 0)   AS as_of_3_pm,
+                	COALESCE(votes_18.count18, 0)   AS as_of_6_pm
                 FROM
                 	vote_vote v
                 LEFT JOIN
                 	votes_12 ON
                 		DATE(v.timestamp) = votes_12.date12
-                		AND SUBSTR(v.voter_id_number, 0, 4) = votes_12.batch12
+                		AND v.voter_batch = votes_12.batch12
                 LEFT JOIN
                 	votes_15 ON
                 		DATE(v.timestamp) = votes_15.date15
-                		AND SUBSTR(v.voter_id_number, 0, 4) = votes_15.batch15
+                		AND v.voter_batch = votes_15.batch15
                 LEFT JOIN
                 	votes_18 ON
                 		DATE(v.timestamp) = votes_18.date18
-                		AND SUBSTR(v.voter_id_number, 0, 4) = votes_18.batch18
+                		AND v.voter_batch = votes_18.batch18
                 GROUP BY
                 	DATE(v.timestamp),
-                	SUBSTR(v.voter_id_number, 0, 4),
+                	v.voter_batch,
                     votes_12.count12,
                     votes_15.count15,
                     votes_18.count18
                 ORDER BY
                    DATE(v.timestamp) DESC,
-                   SUBSTR(v.voter_id_number, 0, 4) ASC;
+                   v.voter_batch ASC;
             """)
 
             batch_results = []
@@ -868,107 +946,105 @@ class ResultsView(OfficerView):
 
                 batch_results.append(cursor.fetchall())
 
-            print(batch_results)
+            # print(batch_results)
 
             # Get the eligible colleges
             eligible_colleges = ElectionStatus.objects.values('college').distinct()
-            eligible_colleges = [College.objects.get(id=eligible_college['college']) for eligible_college in
-                                eligible_colleges]
+            eligible_colleges = [College.objects.get(id=eligible_college['college']) for eligible_college in eligible_colleges]
 
             overall_votes_college = {}
 
             for eligible_college in eligible_colleges:
                 overall_votes_college[eligible_college.name] = Vote.objects.filter(
-                    voter_college=eligible_college.name).count()
+                    voter_college=eligible_college.id).count()
 
             # Votes per day per college per batch
             COLLEGE_BATCH_QUERY = ("""
                 WITH votes_12 AS (
                 	SELECT
-                		DATE(v12.timestamp) AS date12,
-                		SUBSTR(v12.voter_id_number, 0, 4) AS batch12,
-                		COUNT(v12.id) AS count12
+                		DATE(v12.timestamp)         AS date12,
+                		v12.voter_batch             AS batch12,
+                		COUNT(v12.serial_number)    AS count12
                 	FROM
                 		vote_vote v12
                 	WHERE
                 		v12.timestamp <= DATE(v12.timestamp) + interval '12 hours'
-                		AND v12.voter_college = %s
+                		AND v12.voter_college_id = %s
                 	GROUP BY
                 		DATE(v12.timestamp),
-                		SUBSTR(v12.voter_id_number, 0, 4)
+                		v12.voter_batch
                 ),
                 votes_15 AS (
                 	SELECT
-                		DATE(v15.timestamp) AS date15,
-                		SUBSTR(v15.voter_id_number, 0, 4) AS batch15,
-                		COUNT(v15.id) AS count15
+                		DATE(v15.timestamp)         AS date15,
+                		v15.voter_batch             AS batch15,
+                		COUNT(v15.serial_number)    AS count15
                 	FROM
                 		vote_vote v15
                 	WHERE
                 		v15.timestamp <= DATE(v15.timestamp) + interval '15 hours'
-                		AND v15.voter_college = %s
+                		AND v15.voter_college_id = %s
                 	GROUP BY
                 		DATE(v15.timestamp),
-                		SUBSTR(v15.voter_id_number, 0, 4)
+                		v15.voter_batch
                 ),
                 votes_18 AS (
                 	SELECT
-                		DATE(v18.timestamp) AS date18,
-                		SUBSTR(v18.voter_id_number, 0, 4) AS batch18,
-                		COUNT(v18.id) AS count18
+                		DATE(v18.timestamp)         AS date18,
+                		v18.voter_batch             AS batch18,
+                		COUNT(v18.serial_number)    AS count18
                 	FROM
                 		vote_vote v18
                 	WHERE
                 		v18.timestamp <= DATE(v18.timestamp) + interval '18 hours'
-                		AND v18.voter_college = %s
+                		AND v18.voter_college_id = %s
                 	GROUP BY
                 		DATE(v18.timestamp),
-                		SUBSTR(v18.voter_id_number, 0, 4)
+                		v18.voter_batch
                 )
                 SELECT
-                	DATE(v.timestamp) AS date,
-                	SUBSTR(v.voter_id_number, 0, 4) AS batch,
-                	COUNT(v.id) total_count,
-                	COALESCE(votes_12.count12, 0) AS as_of_12_nn,
-                	COALESCE(votes_15.count15, 0) AS as_of_3_pm,
-                	COALESCE(votes_18.count18, 0) AS as_of_6_pm
+                	DATE(v.timestamp)               AS date,
+                	v.voter_batch                   AS batch,
+                	COUNT(v.serial_number)          AS total_count,
+                	COALESCE(votes_12.count12, 0)   AS as_of_12_nn,
+                	COALESCE(votes_15.count15, 0)   AS as_of_3_pm,
+                	COALESCE(votes_18.count18, 0)   AS as_of_6_pm
                 FROM
                 	vote_vote v
                 LEFT JOIN
                 	votes_12 ON
                 		DATE(v.timestamp) = votes_12.date12
-                		AND SUBSTR(v.voter_id_number, 0, 4) = votes_12.batch12
+                		AND v.voter_batch = votes_12.batch12
                 LEFT JOIN
                 	votes_15 ON
                 		DATE(v.timestamp) = votes_15.date15
-                		AND SUBSTR(v.voter_id_number, 0, 4) = votes_15.batch15
+                		AND v.voter_batch = votes_15.batch15
                 LEFT JOIN
                 	votes_18 ON
                 		DATE(v.timestamp) = votes_18.date18
-                		AND SUBSTR(v.voter_id_number, 0, 4) = votes_18.batch18
+                		AND v.voter_batch = votes_18.batch18
                 WHERE
-                	v.voter_college = %s
+                	v.voter_college_id = %s
                 GROUP BY
                 	DATE(v.timestamp),
-                	SUBSTR(v.voter_id_number, 0, 4),
+                	v.voter_batch,
                     votes_12.count12,
                     votes_15.count15,
                     votes_18.count18
                 ORDER BY
                    DATE(v.timestamp) DESC,
-                   SUBSTR(v.voter_id_number, 0, 4) ASC;
+                   v.voter_batch ASC;
             """)
 
             college_batch_results = {}
 
             for eligible_college in eligible_colleges:
                 with connection.cursor() as cursor:
-                    cursor.execute(COLLEGE_BATCH_QUERY,
-                                [eligible_college.name,
-                                    eligible_college.name,
-                                    eligible_college.name,
-                                    eligible_college.name]
-                                )
+                    col_id = eligible_college.id
+                    cursor.execute(
+                        COLLEGE_BATCH_QUERY,
+                        [ col_id, col_id, col_id, col_id ]
+                    )
 
                     college_batch_results[eligible_college.name] = cursor.fetchall()
 
@@ -1387,10 +1463,11 @@ class PasscodeView(UserPassesTestMixin, View):
     @staticmethod
     def is_eligible(voter):
         status = ElectionStatus.objects.filter(college__name=voter.college.name)
-        batch = voter.batch()
+        batch = voter.batch
         flag = False
 
         for s in status:
+            print(s.batch, batch, s.batch == batch)
             if batch == s.batch:
                 flag = True
                 break
