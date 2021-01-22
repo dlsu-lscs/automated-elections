@@ -113,7 +113,6 @@ class ElectionsView(SysadminView):
         except:
             return None
 
-    @staticmethod
     def get_context(self, page, audit):
         # Retrieve all colleges
         if self.colleges == None:
@@ -193,7 +192,7 @@ class ElectionsView(SysadminView):
         page = request.GET.get('page', False)
         audit = request.GET.get('audit', False)
 
-        context = self.get_context(self, page, audit != False)
+        context = self.get_context(page, audit != False)
 
         return render(request, self.template_name, context)
 
