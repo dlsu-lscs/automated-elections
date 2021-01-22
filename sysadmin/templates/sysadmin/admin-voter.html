@@ -162,6 +162,16 @@
                 </div>
 
                 <div class="info-container">
+                    <div class="info-label"> Campus</div>
+                    <select class="info-input" name="voter-campus" required="required">
+                        <option disabled="disabled" selected="selected">(Select a campus)</option>
+                        {% for campus in campuses %}
+                        <option>{{ campus.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="info-container">
                     <div class="info-label"> College</div>
                     <select class="info-input" name="voter-college" required="required">
                         <option disabled="disabled" selected="selected">(Select a college)</option>

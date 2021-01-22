@@ -19,9 +19,9 @@ from django.shortcuts import render
 from django.views import View
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from passcode.views import PasscodeView, ResultsView
+from officer.views import PasscodeView, ResultsView
 from sysadmin.forms import IssueForm, OfficerForm, UnitForm, PositionForm, PollForm
-from vote.models import Vote, Voter, VoteSet, PollSet, College, Candidate, ElectionStatus, Position, Unit, Party, Issue, Take, BasePosition, Poll, Election, ElectionState
+from vote.models import Vote, Voter, VoteSet, PollSet, College, Campus, Candidate, ElectionStatus, Position, Unit, Party, Issue, Take, BasePosition, Poll, Election, ElectionState
 
 
 # Test function for this view
@@ -99,6 +99,8 @@ class SysadminView(RestrictedView):
 
 class ElectionsView(SysadminView):
     template_name = 'sysadmin/admin-elections.html'
+
+    colleges = None
     
     @staticmethod
     def is_votes_empty():
@@ -112,9 +114,10 @@ class ElectionsView(SysadminView):
             return None
 
     @staticmethod
-    def get_context(page, audit):
+    def get_context(self, page, audit):
         # Retrieve all colleges
-        colleges = College.objects.all().order_by('name')
+        if self.colleges == None:
+            self.colleges = College.objects.all().order_by('name')
 
         # Set a flag indicating whether elections have started or not
         election_state = ElectionsView.get_election_state()
@@ -152,14 +155,14 @@ class ElectionsView(SysadminView):
         if not election_state or election_state == ElectionState.ARCHIVED.value:
             # Get all batches from the batch of the current year until the batch of the year six years from the current
             # year
-            current_year = datetime.datetime.now().year
+            current_year = datetime.datetime.now().year - 1
 
             batches = ['1' + str(year)[2:] for year in range(current_year, current_year - 6, -1)]
             batches[-1] = batches[-1] + ' and below'
 
             context = {
                 'election_state': election_state,
-                'colleges': colleges,
+                'colleges': self.colleges,
                 'batches': batches,
                 'audits': paginated_audits,
                 'open_audit': audit,
@@ -179,7 +182,7 @@ class ElectionsView(SysadminView):
             context = {
                 'college_batch_dict': college_batch_dict,
                 'election_state': election_state,
-                'colleges': colleges,
+                'colleges': self.colleges,
                 'audits': paginated_audits,
                 'open_audit': audit,
             }
@@ -190,7 +193,7 @@ class ElectionsView(SysadminView):
         page = request.GET.get('page', False)
         audit = request.GET.get('audit', False)
 
-        context = self.get_context(page, audit != False)
+        context = self.get_context(self, page, audit != False)
 
         return render(request, self.template_name, context)
 
@@ -264,7 +267,6 @@ class ElectionsView(SysadminView):
                                                 eligibility_status=True
                                             ).values('user__username')
                                         )
-                                    # print(batch_voters)
                                     voters += batch_voters
                             except College.DoesNotExist:
                                 # If the college does not exist
@@ -272,9 +274,9 @@ class ElectionsView(SysadminView):
 
                         # Check whether batches were actually selected in the first place
                         if not empty:
-                            for index, voter in enumerate(voters):
-                                send_email(voter['user__username'])
-                                print('Email sent to ' + voter['user__username'] + '.' + str(index) + ' out of ' + str(len(voters)) + ' sent.')
+                            # for index, voter in enumerate(voters):
+                            #     send_email(voter['user__username'])
+                            #     print('Email sent to ' + voter['user__username'] + '.' + str(index) + ' out of ' + str(len(voters)) + ' sent.')
 
                             messages.success(request, 'The elections have now started.')
                         else:
@@ -633,9 +635,12 @@ class ElectionsView(SysadminView):
 class VotersView(SysadminView):
     template_name = 'sysadmin/admin-voter.html'
 
+    colleges = None
+    campuses = None
+
     # A convenience function for creating a voter
     @staticmethod
-    def create_voter(first_name, last_name, username, college_name, voting_status_name, eligibility_status_name):
+    def create_voter(first_name, last_name, username, campus_name, college_name, voting_status_name, eligibility_status_name):
         # Save the names in title case
         first_name = first_name.title()
         last_name = last_name.title()
@@ -662,11 +667,12 @@ class VotersView(SysadminView):
         # Save the changes to the created user
         user.save()
 
+        campus = Campus.objects.get(name=campus_name)
         # Retrieve the college using the name provided
         college = College.objects.get(name=college_name)
 
         # Create the voter using the created user
-        Voter.objects.create(user=user, college=college,
+        Voter.objects.create(user=user, campus=campus, college=college,
                              voting_status=voting_status, eligibility_status=eligibility_status)
 
         election_state = ResultsView.get_election_state()
@@ -721,14 +727,19 @@ class VotersView(SysadminView):
             ) \
                 .order_by('user__username')
 
-        colleges = College.objects.all().order_by('name')
+        if self.colleges == None:
+            self.colleges = College.objects.all().order_by('name')
+
+        if self.campuses == None:
+            self.campuses = Campus.objects.all()
 
         paginator = Paginator(voters, self.objects_per_page)
         paginated_voters = paginator.get_page(page)
 
         context = {
             'voters': paginated_voters,
-            'colleges': colleges,
+            'colleges': self.colleges,
+            'campuses': self.campuses
         }
 
         return context
@@ -758,17 +769,18 @@ class VotersView(SysadminView):
             first_name = request.POST.get('voter-firstnames', False)
             last_name = request.POST.get('voter-lastname', False)
             username = request.POST.get('voter-id', False)
+            campus_name = request.POST.get('voter-campus', False)
             college_name = request.POST.get('voter-college', False)
             voting_status_name = request.POST.get('voter-voting-status', False)
             eligibility_status_name = request.POST.get('voter-eligibility-status', False)
 
             if first_name is not False and last_name is not False and username is not False \
-                    and college_name is not False \
+                    and campus_name is not False and college_name is not False \
                     and voting_status_name is not False and eligibility_status_name is not False:
                 try:
                     with transaction.atomic():
                         # Create the voter
-                        self.create_voter(first_name, last_name, username, college_name, voting_status_name,
+                        self.create_voter(first_name, last_name, username, campus_name, college_name, voting_status_name,
                                             eligibility_status_name)
 
                         # Display a success message
@@ -1008,13 +1020,17 @@ class CandidatesView(SysadminView):
         else:
             party = Party.objects.get(name=party)
 
-        # A candidate may only run for a college or batch position in his own college and batch
+        # A candidate may only run for a campus, college or batch position in his own college and batch
         if position.base_position.type == BasePosition.EXECUTIVE \
+                or position.base_position.type == BasePosition.CAMPUS \
+                    and position.unit.campus_id == voter.campus_id \
                 or position.base_position.type == BasePosition.COLLEGE \
-                and position.unit.college.name == voter.college.name \
+                    and position.unit.campus_id == voter.campus_id \
+                    and position.unit.college_id == voter.college_id \
                 or position.base_position.type == BasePosition.BATCH \
-                and (position.unit.batch == voter.user.username[:3]
-                     and position.unit.college.name == voter.college.name):
+                    and position.unit.batch == voter.user.username[:3] \
+                    and position.unit.college_id == voter.college_id \
+                    and position.unit.campus == vote.college_id:
             # Create the candidate
             Candidate.objects.create(voter=voter, position=position, party=party)
         else:
@@ -1156,8 +1172,8 @@ class CandidatesView(SysadminView):
                         except Party.DoesNotExist:
                             messages.error(request, 'That party does not exist.')
                         except Candidate.DoesNotExist:
-                            messages.error(request,
-                                           'A candidate may only run for a college or batch position in his own college'
+                            messages.error(request, 
+                                           'A candidate may only run for a campus, college or batch position in his own college'
                                            ' and batch.')
 
                         context = self.display_objects(1)

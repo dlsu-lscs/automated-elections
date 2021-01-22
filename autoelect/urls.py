@@ -33,7 +33,7 @@ urlpatterns = [
     path('logout/', include('logout.urls')),
 
     # /officer/
-    path('officer/', include('passcode.urls')),
+    path('officer/', include('officer.urls')),
 
     # /sysadmin/
     path('sysadmin/', include('sysadmin.urls')),

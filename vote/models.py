@@ -6,6 +6,14 @@ from django.db import models
 from audit_trail.history import AuditTrail, AuditManager
 from enum import Enum
 
+# College Campus: MNL, LAG
+class Campus(models.Model):
+    name = models.CharField(max_length=3, unique=True)
+
+    def __str__(self):
+        return self.name
+
+# College Names: CCS, COS
 class College(models.Model):
     name = models.CharField(max_length=16, unique=True)
 
@@ -13,12 +21,27 @@ class College(models.Model):
         return self.name
 
 
+"""
+    ongoing:    When the election is currently ongoing
+        -> (next state) paused or blocked
+    paused:     When the election is on paused, (during the night) to stop
+                    students voting at this time
+        -> (next state) ongoing
+    blocked:    When the election is stopped and the results are still
+                    hidden to the comelec officer until the sysadmin unblocks
+                    the results
+        -> (next state) finished
+    finished:   Unblocked and the results can be viewed by the comelec officers
+        -> (next state) archived
+    archived:   The results have been archived to a csv file and the data will
+                    be removed from the database
+"""
 class ElectionState(Enum):
     ONGOING = "ongoing"
     PAUSED = "paused"
     BLOCKED = "blocked"
-    FINISHED = "finished"
-    ARCHIVED = "archived"
+    FINISHED = "finished"   
+    ARCHIVED = "archived"   
 
     @classmethod
     def choices(cls):
@@ -32,6 +55,7 @@ class Election(models.Model):
     def __str__(self):
         return str(self.timestamp) + " elections is currently " + self.state
 
+
 class ElectionStatus(models.Model):
     batch = models.CharField(max_length=4)
     college = models.ForeignKey(College, on_delete=models.CASCADE)
@@ -42,6 +66,7 @@ class ElectionStatus(models.Model):
 
 class Unit(models.Model):
     college = models.ForeignKey(College, on_delete=models.CASCADE, null=True, blank=True)
+    campus = models.ForeignKey(Campus, on_delete=models.CASCADE, null=True, blank=True)
     batch = models.CharField(max_length=4, null=True, blank=True)
     name = models.CharField(max_length=16, unique=True)
 
@@ -54,11 +79,13 @@ class Unit(models.Model):
 
 class BasePosition(models.Model):
     EXECUTIVE = 'Executive'
+    CAMPUS = 'Campus'
     BATCH = 'Batch'
     COLLEGE = 'College'
 
     POSITION_TYPES = (
         (EXECUTIVE, 'Executive'),
+        (CAMPUS, 'Campus'),
         (BATCH, 'Batch'),
         (COLLEGE, 'College'),
     )
@@ -88,6 +115,7 @@ class Position(models.Model):
 class Voter(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     college = models.ForeignKey(College, on_delete=models.CASCADE)
+    campus = models.ForeignKey(Campus, on_delete=models.CASCADE)
     voting_status = models.BooleanField(default=True)
     eligibility_status = models.BooleanField(default=True)
 
@@ -127,6 +155,7 @@ class Issue(models.Model):
     def __str__(self):
         return self.name
 
+
 class Take(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
     issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
@@ -139,7 +168,7 @@ class Take(models.Model):
 
 class Vote(models.Model):
     voter_id_number = models.CharField(max_length=8, unique=True)
-    voter_college = models.CharField(max_length=3)
+    voter_college = models.CharField(max_length=7)
     serial_number = models.CharField(max_length=10, default=voter_id_number, unique=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -168,12 +197,14 @@ class VoteSet(models.Model):
         return self.vote.voter_id_number + " voted for " \
                + self.candidate.voter.user.first_name + " " + self.candidate.voter.user.last_name
 
+
 class Poll(models.Model):
     name = models.CharField(max_length=64, unique=True)
     identifier = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     def __str__(self):
         return self.name
+
 
 class PollAnswerType(Enum):
     YES = "yes"
@@ -183,6 +214,7 @@ class PollAnswerType(Enum):
     @classmethod
     def choices(cls):
         return tuple((i.name, i.value) for i in cls)
+
 
 class PollSet(models.Model):
     vote = models.ForeignKey(Vote, on_delete=models.CASCADE)

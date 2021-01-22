@@ -20,7 +20,7 @@ class VoterLogoutView(View):
                     return redirect('vote:vote')
                 else:
                     # If not, redirect to the admin's page
-                    return redirect('passcode:passcode')
+                    return redirect('officer:passcode')
             except Group.DoesNotExist:
                 # If the queried group does not exist, log the user out
                 logout(request)
@@ -46,7 +46,7 @@ class VoterFailView(View):
                     return redirect('vote:vote')
                 else:
                     # If not, redirect to the admin's page
-                    return redirect('passcode:passcode')
+                    return redirect('officer:passcode')
             except Group.DoesNotExist:
                 # If the queried group does not exist, log the user out
                 logout(request)

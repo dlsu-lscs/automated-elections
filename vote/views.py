@@ -32,16 +32,8 @@ def vote_test_func(user):
 class VoteView(UserPassesTestMixin, View):
     template_name = 'vote/voting.html'
 
-    # TODO: To remove this, restart the server
-    context_cache = {
-        'BAGCED': {},
-        'CCS': {},
-        'CLA': {},
-        'COS': {},
-        'GCOE': {},
-        'RVR-COB': {},
-        'SOE': {}
-    }
+    # TODO: To remove this, restart the server F
+    context_cache = {}
 
     # Check for duplicate votes and positions in a voteset
     @staticmethod
@@ -126,14 +118,14 @@ class VoteView(UserPassesTestMixin, View):
         # Get the current voter from the current user
         voter = Voter.objects.get(user__username=request.user.username)
 
-        # Get the college of the current voter
-        college = voter.college.name
+        campus  = voter.campus.name         # Get the campus  of the current voter
+        college = voter.college.name        # Get the college of the current voter
+        batch   = voter.user.username[:3]   # Get the batch   of the current voter
+        
+        key = campus + '-' + college + '-' + batch
 
-        # Get the batch of the current voter
-        batch = voter.user.username[:3]
-
-        if batch in self.context_cache[college]:
-            print('Cached {} {}'.format(college, batch))
+        if key in self.context_cache:
+            print('Cached {}'.format(key))
         else:
             # Get all candidates
             candidates = {}
@@ -153,18 +145,33 @@ class VoteView(UserPassesTestMixin, View):
                 candidates[position_type] = {}
 
                 # Then try to fill that partition with candidates running for that position type
-                candidates_type = Candidate.objects.filter(position__base_position__type=position_type).order_by(
-                    'party__name').order_by('position__priority')
+                candidates_type = Candidate.objects.filter(position__base_position__type=position_type).order_by('position__priority').order_by('party__name')
 
                 if candidates_type.count() != 0:
                     for candidate in candidates_type:
-                        # If the position is of type college, the position's college must match the voter's college
-                        # If the position is of type batch, that position's batch must match the voter's batch and college
-                        if position_type == BasePosition.COLLEGE and candidate.position.unit.college.name != college \
-                                or position_type == BasePosition.BATCH \
-                                and (candidate.position.unit.batch != batch
-                                    or candidate.position.unit.college.name != college):
-                            continue
+
+                        candidate_campus  = str(candidate.position.unit.campus)
+                        candidate_college = str(candidate.position.unit.college)
+                        candidate_batch   = candidate.position.unit.batch
+                        
+                        # print(candidate)
+                        # print(position_type)
+                        # print(candidate_campus, '=', campus, candidate_campus == campus)
+                        # print(candidate_college, '=', college, candidate_college == college)
+                        # print(candidate_batch, '=', batch , candidate_batch == batch)
+
+                        # If the position is of type campus,  the position's campus  must match the voter's campus
+                        if position_type == BasePosition.CAMPUS:
+                            if campus != candidate_campus:
+                                continue
+                        # If the position is of type college, the position's college must match the voter's campus and college
+                        elif position_type == BasePosition.COLLEGE:
+                            if campus != candidate_campus or college != candidate_college:
+                                continue
+                        # If the position is of type batch,   the position's batch   must match the voter's campus, college, and batch
+                        elif position_type == BasePosition.BATCH:
+                            if campus != candidate_campus or college != candidate_college or batch != candidate_batch:
+                                continue
 
                         # Only add the candidate if all the conditions above have been satisfied
                         position = candidate.position
@@ -187,9 +194,7 @@ class VoteView(UserPassesTestMixin, View):
                     # If there are no candidates running for this position type, just forget about that position type and
                     # move on
                     candidates.pop(position_type)
-
-            # print(candidates["Executive"])
-
+                
             # Dump the positions into JSON
             positions_json = json.dumps(list(positions_json))
 
@@ -212,10 +217,10 @@ class VoteView(UserPassesTestMixin, View):
                 'polls_json': polls_json
             }
 
-            self.context_cache[college][batch] = context
+            self.context_cache[key] = context
 
         # Get this page
-        return render(request, self.template_name, self.context_cache[college][batch])
+        return render(request, self.template_name, self.context_cache[key])
 
     def post(self, request):
         voter = request.user.voter

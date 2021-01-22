@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group
 from django.shortcuts import render, redirect
 from django.views import View
 
-from passcode.views import ResultsView
+from officer.views import ResultsView
 from vote.models import Voter, ElectionStatus, ElectionState
 
 class VoterLoginView(View):
@@ -26,7 +26,7 @@ class VoterLoginView(View):
                     return redirect('sysadmin:voters')
                 else:
                     # If not, redirect to the admin's page
-                    return redirect('passcode:passcode')
+                    return redirect('officer:passcode')
             except Group.DoesNotExist:
                 # If the queried group does not exist, log the user out
                 logout(request)
@@ -38,6 +38,7 @@ class VoterLoginView(View):
     def post(self, request):
         id_number = request.POST.get('username', False)
         password = request.POST.get('password', False)
+        
         # Captcha validation
         recaptcha_response = request.POST.get('g-recaptcha-response')
         data = {
@@ -46,6 +47,7 @@ class VoterLoginView(View):
         }
         r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
         result = r.json()
+
         if result['success']:
             # Log in only if there are actually elections ongoing
             if ResultsView.get_election_state() == ElectionState.ONGOING.value:
@@ -139,7 +141,7 @@ class AdminLoginView(View):
                     return redirect('sysadmin:voters')
                 else:
                     # If not, redirect to the admin's page
-                    return redirect('passcode:passcode')
+                    return redirect('officer:passcode')
             except Group.DoesNotExist:
                 # If the queried group does not exist, log the user out
                 logout(request)
@@ -173,7 +175,7 @@ class AdminLoginView(View):
                         if Group.objects.get(name='comelec') in user.groups.all():
                             login(request, user)
 
-                            return redirect('passcode:passcode')
+                            return redirect('officer:passcode')
                         # If the user is a system administrator, log the user in
                         elif Group.objects.get(name='sysadmin') in user.groups.all():
                             login(request, user)
