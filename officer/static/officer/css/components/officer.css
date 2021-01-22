@@ -20,108 +20,6 @@ body {
     background-color: white;
 }
 
-#header-container {
-    width: 75%;
-    height: 10%;
-    background: #36A472;
-
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    top: 0;
-    position: fixed;
-
-    padding: 0px 10% 0px 15%;
-}
-
-#header-ballot {
-    width: 40px;
-    height: 40px;
-}
-
-a {
-    color: #C0C0C0;
-    font-weight: 500;
-    text-decoration: none;
-    margin-left: 60px;
-    cursor: pointer;
-}
-
-a:hover {
-    color: white;
-}
-
-#selected {
-    color: white;
-}
-
-/*
-#user-container .dropbtn {
-	font-size: 16px;
-	border: 1px solid white;
-	border: none;
-	outline: none;
-	color: rgb(250, 235, 215);
-	padding: 14px 16px;
-	background-color: inherit;
-	font-weight: bold;
-	display: flex;
-	flex-direction: row;
-}*/
-
-.user-container-content {
-    width: 100px;
-    height: 300px;
-    display: none;
-    position: absolute;
-    overflow-x: hidden;
-    overflow-y: auto;
-    max-height: 590px;
-    background: rgb(28, 30, 34);
-    min-width: 185px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-}
-
-#user-container {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    margin-left: auto;
-    margin-right: 10px;
-
-}
-
-#user-container:hover .user-container-content {
-    display: block;
-    z-index: 10;
-
-}
-
-#log-out {
-    color: #fff;
-}
-
-#log-out:hover {
-    border-bottom: 1px solid white;
-}
-
-#user-icon {
-    width: 30px;
-    height: 30px;
-    margin-left: 100px;
-}
-
-#user-name {
-    color: #fff;
-    margin-left: 20px;
-    font-weight: 600;
-}
-
 #tab-buttons-container {
     margin: 10% 15% 10px 15%;
 
@@ -421,12 +319,6 @@ select {
 
 .confirm:hover {
     background-color: #6BE772;
-}
-
-#logo {
-    text-align: center;
-    margin-top: 100px;
-    margin-bottom: 30px;
 }
 
 .student-population {

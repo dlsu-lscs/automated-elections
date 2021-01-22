@@ -84,7 +84,7 @@ a:hover {
 #user-name {
     color: #fff;
     margin-left: 20px;
-    margin-right: 20px; 
+    margin-right:20px; 
     font-weight: 600;
 }
 
@@ -95,33 +95,4 @@ a:hover {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-}
-
-.dropdown-container {
-    position: relative;
-    display: inline-block;
-}
-  
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #f1f1f1;
-    width: 100%; 
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
-}
-  
-.dropdown-content a {
-    color: black;
-    padding: 10px;
-    text-decoration: none;
-    display: block;
-}
-  
-.dropdown-content a:hover {
-    background-color: #ddd;
-}
-  
-.dropdown-container:hover .dropdown-content {
-    display: block;
 }
