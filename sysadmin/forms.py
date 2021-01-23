@@ -1,7 +1,6 @@
 from django import forms
-from django.contrib.auth.models import User
 
-from vote.models import Issue, Unit, Position, Poll
+from vote.models import Issue, Unit, Position, Poll, AuthUser as User
 
 
 class IssueForm(forms.ModelForm):

@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.core.mail import EmailMultiAlternatives
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction, connection
@@ -21,7 +21,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 from officer.views import PasscodeView, ResultsView
 from sysadmin.forms import IssueForm, OfficerForm, UnitForm, PositionForm, PollForm
-from vote.models import Vote, Voter, VoteSet, PollSet, College, Campus, Candidate, ElectionStatus, Position, Unit, Party, Issue, Take, BasePosition, Poll, Election, ElectionState
+from vote.models import Vote, Voter, VoteSet, PollSet, College, Campus, Candidate, ElectionStatus, Position, Unit, Party, Issue, Take, BasePosition, Poll, Election, ElectionState, AuthUser as User
 
 
 # Test function for this view
@@ -130,11 +130,11 @@ class ElectionsView(SysadminView):
             FROM
                 xaction AS x
             INNER JOIN
-                auth_user AS a
+                vote_authuser AS a
             ON
                 x.user_id=a.id
             WHERE
-                x.entity_id=1 AND x.xaction_type='I'
+                x.display_text='Vote' AND x.xaction_type='I'
             ORDER BY
                 x.id DESC
             LIMIT
@@ -407,7 +407,7 @@ class ElectionsView(SysadminView):
                                 	LEFT JOIN
                                 		vote_voter v ON c.voter_id = v.id
                                 	LEFT JOIN
-                                		auth_user u ON v.user_id = u.id
+                                		vote_authuser u ON v.user_id = u.id
                                 	LEFT JOIN
                                 		vote_party p ON c.party_id = p.id
                                 ),
@@ -499,9 +499,9 @@ class ElectionsView(SysadminView):
                             electionPollZip.write('Poll Results.csv', compress_type=ZIP_DEFLATED)
                             electionPollZip.close()
 
-                            dbBackupZip = ZipFile('dbBackup.zip', 'w')
-                            dbBackupZip.write('db.sqlite3', compress_type=ZIP_DEFLATED)
-                            dbBackupZip.close()
+                            # dbBackupZip = ZipFile('dbBackup.zip', 'w')
+                            # dbBackupZip.write('db.sqlite3', compress_type=ZIP_DEFLATED)
+                            # dbBackupZip.close()
 
                             # Create a response object, and classify it as a ZIP response
                             response = HttpResponse(open('Election and Poll Results.zip', 'rb').read(), content_type='application/x-zip-compressed')

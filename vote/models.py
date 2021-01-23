@@ -1,10 +1,16 @@
 # Create your models here.
 import uuid
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from audit_trail.history import AuditTrail, AuditManager
 from enum import Enum
+
+class AuthUser(AbstractUser):
+    history = AuditTrail()
+
+    class Meta:
+        display_format = 'User Edit'
 
 # College Campus: MNL, LAG
 class Campus(models.Model):
@@ -113,7 +119,7 @@ class Position(models.Model):
 
 
 class Voter(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
+    user = models.OneToOneField(AuthUser, on_delete=models.CASCADE, unique=True)
     campus = models.ForeignKey(Campus, on_delete=models.CASCADE)
     college = models.ForeignKey(College, on_delete=models.CASCADE)
     batch = models.CharField(max_length=3)

@@ -3,7 +3,7 @@ INSERT INTO auth_group(name) VALUES
     ('comelec'),
     ('voter');
 
-INSERT INTO auth_user_groups(user_id, group_id)
+INSERT INTO vote_authuser_groups(authuser_id, group_id)
     VALUES (1, 1);
 
 INSERT INTO vote_college(name) VALUES
