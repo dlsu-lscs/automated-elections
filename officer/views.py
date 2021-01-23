@@ -758,7 +758,7 @@ class ResultsView(OfficerView):
                 vote_results_json = {}
 
                 for result in vote_results[query]:
-                    print(result)
+                    # print(result)
 
                     if result[4] != None:
                         vote_results_json[str(result[2])] = int(result[4])
@@ -807,7 +807,7 @@ class ResultsView(OfficerView):
                 poll_results_json = {}
 
                 for result in poll_results[pollquery]:
-                    print(result)
+                    # print(result)
 
                     poll_results_json[result[0]] = (result[1], result[2])
 
@@ -1467,7 +1467,6 @@ class PasscodeView(UserPassesTestMixin, View):
         flag = False
 
         for s in status:
-            print(s.batch, batch, s.batch == batch)
             if batch == s.batch:
                 flag = True
                 break

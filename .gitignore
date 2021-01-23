@@ -6,6 +6,7 @@
 ;;directories to ignore
 .idea/
 
-test.py
+*.DS_Store
 
-autoelect/.env
+ssl
+virt

@@ -324,7 +324,7 @@ class VoteView(UserPassesTestMixin, View):
                         voter.save()
 
                         timestamp = vote.timestamp.__str__()
-                        print(timestamp)
+                        # print(timestamp)
 
                         # Send email receipt
                         self.send_email_receipt(request.user, votes, str(vote.serial_number), timestamp)
