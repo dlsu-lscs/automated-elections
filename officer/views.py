@@ -11,7 +11,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.contrib.sessions.models import Session
 from django.core.mail import EmailMultiAlternatives
 from django.core.paginator import Paginator
@@ -23,7 +23,7 @@ from django.utils import timezone
 from django.views import View
 
 # Test function for this view
-from vote.models import Voter, College, Candidate, ElectionStatus, Vote, Position, Issue, BasePosition, Unit, Poll, ElectionState, Election
+from vote.models import Voter, College, Candidate, ElectionStatus, Vote, Position, Issue, BasePosition, Unit, Poll, ElectionState, Election, AuthUser as User
 
 # EMAIL BODY CONST
 fp = open(settings.BASE_DIR + '/email_template.html', 'r')
@@ -642,7 +642,7 @@ class ResultsView(OfficerView):
                     	LEFT JOIN
                     		vote_voter v ON c.voter_id = v.id
                     	LEFT JOIN
-                    		auth_user u ON v.user_id = u.id
+                    		vote_authuser u ON v.user_id = u.id
                     	LEFT JOIN
                     		vote_party p ON c.party_id = p.id
                     ),
@@ -1296,7 +1296,7 @@ class ResultsView(OfficerView):
                                 "	LEFT JOIN\n"
                                 "		vote_voter v ON c.voter_id = v.id\n"
                                 "	LEFT JOIN\n"
-                                "		auth_user u ON v.user_id = u.id\n"
+                                "		vote_authuser u ON v.user_id = u.id\n"
                                 "	LEFT JOIN\n"
                                 "		vote_party p ON c.party_id = p.id\n"
                                 "),\n"
