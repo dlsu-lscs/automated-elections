@@ -29,5 +29,14 @@ python3 manage.py runserver [-b=<host>:<port>]
 
 # Run in production
 ```
+# Set DEBUG = False
 gunicorn -c conf/gunicorn_config.py autoelect.wsgi:app
+```
+
+# Troubleshooting
+- .env is not set so try making one
+
+- Missing css in admin
+```
+python3 manage.py collectstatic --noinput
 ```
