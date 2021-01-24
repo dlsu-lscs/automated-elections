@@ -154,6 +154,10 @@ USE_TZ = False
 
 STATIC_URL = env('STATIC_PATH')
 
+STATICFILES_DIRS = (
+  os.path.join(BASE_DIR, env('STATIC_DIR')),
+)
+
 # The URL where requests are redirected for login
 LOGIN_URL = '/login/'
 
