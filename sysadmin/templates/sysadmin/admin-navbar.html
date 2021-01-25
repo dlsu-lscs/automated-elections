@@ -1,0 +1,62 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'sysadmin/css/components/admin-navbar.css' %}" />
+<div class="header-container desktop-nav">
+    <div class="nav-item">
+        <img id="header-ballot" src="{% static 'sysadmin/assets/svg/ballot-white.svg' %}">
+    </div>
+    <div class="nav-item">
+        <a class="unselectable" href="{% url 'sysadmin:elections' %}">Election Status</a>
+    </div>
+    <div class="nav-item">
+        <a class="unselectable" href="{% url 'sysadmin:voters' %}">Voters List</a>
+    </div>
+    <div class="nav-item">
+        <a class="unselectable" href="{% url 'sysadmin:candidates' %}">Candidates List</a>
+    </div>
+    <div class="nav-item">
+        <a class="unselectable" href="{% url 'sysadmin:officers' %}">Comelec Officers</a>
+    </div>
+    <div class="dropdown-container nav-item">
+        <a class="unselectable" href="#">Units & Positions</a>
+        <div class="dropdown-content">
+            <a class="unselectable" href="{% url 'sysadmin:units' %}">Units</a>
+            <a class="unselectable" href="{% url 'sysadmin:positions' %}">Positions</a>
+        </div>
+    </div>
+    <div class="dropdown-container nav-item">
+        <a class="unselectable" href="#">Plebiscite</a>
+        <div class="dropdown-content">
+            <a class="unselectable" href="{% url 'sysadmin:issues' %}">Issues</a>
+            <a class="unselectable" href="{% url 'sysadmin:polls' %}">Polls</a>
+        </div>
+    </div>
+    <div id="user-container">
+        <!-- <img id="user-icon" src="{% static 'sysadmin/assets/svg/user.svg' %}"> -->
+        <div id="user-name" class="unselectable"> {{ user.first_name }} {{ user.last_name }}</div>
+        <a id="log-out" class="unselectable" href="{% url 'logout:logout' %}">Logout</a>
+    </div>
+</div>
+<div class="mobile-nav">
+    <nav role="navigation">
+        <div id="menuToggle">
+          <input type="checkbox" style="margin:0px"/>
+          <span></span>
+          <span></span>
+          <span></span>
+          <ul id="menu">
+            <a class="unselectable" href="{% url 'sysadmin:elections' %}"><li>Election Status</li></a>
+            <a class="unselectable" href="{% url 'sysadmin:voters' %}"><li>Voters List</li></a>
+            <a class="unselectable" href="{% url 'sysadmin:candidates' %}"><li>Candidates List</li></a>
+            <a class="unselectable" href="{% url 'sysadmin:officers' %}"><li>Comelec Officers</li></a>
+            <a class="unselectable" href="{% url 'sysadmin:candidates' %}"><li>Candidates List</li></a>
+            <a class="unselectable" href="{% url 'sysadmin:units' %}"><li>Units</li></a>
+            <a class="unselectable" href="{% url 'sysadmin:positions' %}"><li>Positions</li></a>
+            <a class="unselectable" href="{% url 'sysadmin:issues' %}"><li>Issues</li></a>
+            <a class="unselectable" href="{% url 'sysadmin:polls' %}"><li>Polls</li></a>
+            <a id="log-out" class="unselectable" href="{% url 'logout:logout' %}"><li>Logout</li></a>
+            
+          </ul>
+        </div>
+    </nav>
+    <div id="user-name" class="unselectable"> {{ user.first_name }} {{ user.last_name }}</div>
+</div>

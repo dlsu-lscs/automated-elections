@@ -1,0 +1,9 @@
+{% load static %}
+<link href="{% static 'officer/css/components/footer.css' %}" rel="stylesheet" type="text/css"/>
+<div class="footer-logo">
+    {% if not white %}
+        <img class="center-logo" src="{% static 'officer/assets/svg/org-logos.svg' %}">
+    {% elif white %}
+        <img class="center-logo" src="{% static 'sysadmin/assets/png/org-logos-white.png' %}">
+    {% endif %}
+</div>
