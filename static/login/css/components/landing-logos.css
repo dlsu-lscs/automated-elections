@@ -1,8 +1,6 @@
 #org-logos {
-    width: 437px;
-    margin: 10px;
-    position: absolute;
-    bottom: 0;
+    width: 400px;
+    margin-left: 10px;
 }
 
 #uxsoc-logo {
@@ -19,4 +17,13 @@
     top: 0;
     height: 50px;
     margin: 10px;
+}
+
+@media screen and (max-width: 500px){
+    #org-logos {
+        display: block; 
+        position: relative; 
+        width: 80%;
+        margin: 10px auto 0px; 
+    }
 }
