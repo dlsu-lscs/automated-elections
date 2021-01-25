@@ -4,7 +4,7 @@
 
 <head>
     <title>Admin Dashboard</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- CSS LINKS -->
     <link rel="stylesheet" type="text/css" href="{% static 'sysadmin/css/components/admin.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'sysadmin/css/components/admin-voter.css' %}" />
@@ -179,9 +179,7 @@
         </form>
     </div>
 
-    <div id="logo">
-        <img width=500 height=50 src="{% static 'sysadmin/assets/png/org-logos.png' %}">
-    </div>
+    {% include 'sysadmin/footer-logo.html' %}
 </body>
 
 <!-- JAVASCRIPT LINK-->
