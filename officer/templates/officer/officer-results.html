@@ -3,7 +3,7 @@
 <head>
     <title>Officer | Results</title>
     <meta name="viewport" content="height=device-height, initial-scale=1">
-
+    
     <!-- CSS LINKS -->
     <link rel="stylesheet" type="text/css" href="{% static 'officer/css/components/officer.css' %}"/>
     <link rel="stylesheet" type="text/css" href="{% static 'officer/css/components/officer-results.css' %}"/>
@@ -12,20 +12,8 @@
 
 </head>
 <body {% if identifier %}onload="drawChart('{{ vote_results_json|escapejs }}')" {% endif %}>
-<!-- HEADER BAR THING -->
-<div id="header-container">
-    <img id="header-ballot" src="{% static 'officer/assets/svg/ballot-white.svg' %}">
-    <a href="{% url 'officer:voters' %}">Voters List</a>
-    <a href="{% url 'officer:candidates' %}">Candidates List</a>
-    <a href="{% url 'officer:elections' %}" id="selected">Election Dashboard</a>
-    <a href="{% url 'officer:passcode' %}">Passcode Generator</a>
-    <div id="user-container">
-        <img id="user-icon" src="{% static 'officer/assets/svg/user.svg' %}">
-        <div id="user-name"> {{ user.first_name }} {{ user.last_name }}</div>
-        <a id="log-out" href="{% url 'logout:logout' %}">Logout</a>
-    </div>
 
-</div>
+{% include 'officer/officer-navbar.html' %}
 
 <!-- TABS BUTTONS TO TRAVERSE THE DIFF SECTIONS -->
 <div id="tab-buttons-container">
@@ -385,9 +373,7 @@
             </div>
         {% endif %}
 
-        <div id="logo">
-            <img width=500 height=50 src="{% static 'officer/assets/svg/org-logos.svg' %}">
-        </div>
+        {% include 'officer/footer-logo.html' %}
     </div>
 </div>
 
