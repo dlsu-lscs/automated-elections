@@ -43,7 +43,7 @@ body {
 }
 
 #tab-buttons-container {
-    margin: 10% 15% 10px 15%;
+    margin: 100px 15% 10px 15%;
 
     border-bottom: 1px solid black;
     display: flex;

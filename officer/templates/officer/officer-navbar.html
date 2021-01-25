@@ -1,24 +1,42 @@
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'officer/css/components/officer-navbar.css' %}" />
-<div id="header-container">
+<div class="header-container desktop-nav">
     <div class="nav-item">
-        <img id="header-ballot" src="{% static 'officer/assets/svg/ballot-white.svg' %}">
+        <img id="header-ballot" class="unselectable" src="{% static 'officer/assets/svg/ballot-white.svg' %}">
     </div>
     <div class="nav-item">
-        <a href="{% url 'officer:voters' %}">Voters List</a>
+        <a class="unselectable" href="{% url 'officer:voters' %}">Voters List</a>
     </div>
     <div class="nav-item">
-        <a href="{% url 'officer:candidates' %}" id="selected">Candidates List</a>
+        <a class="unselectable" href="{% url 'officer:candidates' %}" id="selected">Candidates List</a>
     </div>
     <div class="nav-item">
-        <a href="{% url 'officer:elections' %}">Election Dashboard</a>
+        <a class="unselectable" href="{% url 'officer:elections' %}">Election Dashboard</a>
     </div>
     <div class="nav-item">
-        <a href="{% url 'officer:passcode' %}">Passcode Generator</a>
+        <a class="unselectable" href="{% url 'officer:passcode' %}">Passcode Generator</a>
     </div>
     <div id="user-container">
-        <img id="user-icon" src="{% static 'officer/assets/svg/user.svg' %}">
-        <div id="user-name"> {{ user.first_name }} {{ user.last_name }}</div>
-        <a id="log-out" href="{% url 'logout:logout' %}">Logout</a>
+        <!-- <img id="user-icon" src="{% static 'officer/assets/svg/user.svg' %}"> -->
+        <div id="user-name" class="unselectable"> {{ user.first_name }} {{ user.last_name }}</div>
+        <a id="log-out" class="unselectable" href="{% url 'logout:logout' %}">Logout</a>
     </div>
+</div>
+<div class="mobile-nav">
+    <nav role="navigation">
+        <div id="menuToggle">
+          <input type="checkbox" style="margin:0px"/>
+          <span></span>
+          <span></span>
+          <span></span>
+          <ul id="menu">
+            <a class="unselectable" href="{% url 'officer:voters' %}"><li>Voters List</li></a>
+            <a class="unselectable" href="{% url 'officer:candidates' %}" id="selected"><li>Candidates List</li></a>
+            <a class="unselectable" href="{% url 'officer:elections' %}"><li>Election Dashboard</li></a>
+            <a class="unselectable" href="{% url 'officer:passcode' %}"><li>Passcode Generator</li></a>
+            <a class="unselectable" id="log-out" href="{% url 'logout:logout' %}"><li>Logout</li></a>
+          </ul>
+        </div>
+    </nav>
+    <div class="unselectable" id="user-name"> {{ user.first_name }} {{ user.last_name }}</div>
 </div>
