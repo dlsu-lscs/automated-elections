@@ -1,0 +1,1 @@
+gunicorn -c conf/gunicorn_config.py autoelect.wsgi:app

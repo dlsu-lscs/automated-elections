@@ -281,19 +281,17 @@ class VoteView(UserPassesTestMixin, View):
 
                     with transaction.atomic():
                         # Create a vote object to represent a single vote of a user
-                        vote = Vote(voter_id_number=voter.user.username, voter_college=voter.college.name)
+                        vote = Vote(
+                            voter=voter,
+                            voter_campus_id=voter.campus_id,
+                            voter_college_id=voter.college_id,
+                            voter_batch=voter.user.username[:3],
+                        )
 
-                        vote.serial_number = '#'
-                        vote.save()
-
-                        # Generate its serial number
-                        serial_number = self.generate_serial_number(vote.id)
-
-                        vote.serial_number = serial_number
-                        vote.save()
                         vote.save(using='vote1')
                         vote.save(using='vote2')
                         vote.save(using='vote3')
+                        vote.save()
 
                         # Create a vote set array representing the individual votes to be saved in the database
                         actual_votes = [
@@ -310,7 +308,6 @@ class VoteView(UserPassesTestMixin, View):
 
                         # Save all votes into the database
                         for actual_vote in actual_votes:
-                            # actual_vote.save()
                             actual_vote.save()
                             actual_vote.save(using='vote1')
                             actual_vote.save(using='vote2')
@@ -327,10 +324,10 @@ class VoteView(UserPassesTestMixin, View):
                         voter.save()
 
                         timestamp = vote.timestamp.__str__()
-                        print(timestamp)
+                        # print(timestamp)
 
                         # Send email receipt
-                        self.send_email_receipt(request.user, votes, serial_number, timestamp)
+                        self.send_email_receipt(request.user, votes, str(vote.serial_number), timestamp)
 
                     # Log the user out
                     logout(request)

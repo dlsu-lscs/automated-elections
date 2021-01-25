@@ -1,10 +1,16 @@
 # Create your models here.
 import uuid
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from audit_trail.history import AuditTrail, AuditManager
 from enum import Enum
+
+class AuthUser(AbstractUser):
+    history = AuditTrail()
+
+    class Meta:
+        display_format = 'User Edit'
 
 # College Campus: MNL, LAG
 class Campus(models.Model):
@@ -113,17 +119,15 @@ class Position(models.Model):
 
 
 class Voter(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
-    college = models.ForeignKey(College, on_delete=models.CASCADE)
+    user = models.OneToOneField(AuthUser, on_delete=models.CASCADE, unique=True)
     campus = models.ForeignKey(Campus, on_delete=models.CASCADE)
+    college = models.ForeignKey(College, on_delete=models.CASCADE)
+    batch = models.CharField(max_length=3)
     voting_status = models.BooleanField(default=True)
     eligibility_status = models.BooleanField(default=True)
 
     def __str__(self):
         return "(" + self.user.username + ") " + self.user.first_name + " " + self.user.last_name
-
-    def batch(self):
-        return self.user.username[:3]
 
 
 class Party(models.Model):
@@ -167,9 +171,14 @@ class Take(models.Model):
 
 
 class Vote(models.Model):
-    voter_id_number = models.CharField(max_length=8, unique=True)
-    voter_college = models.CharField(max_length=7)
-    serial_number = models.CharField(max_length=10, default=voter_id_number, unique=True)
+    voter = models.ForeignKey(Voter, on_delete=models.CASCADE)
+    # voter_id_number = models.CharField(max_length=8, unique=True)
+
+    serial_number = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    voter_campus    = models.ForeignKey(Campus, on_delete=models.CASCADE)
+    voter_college   = models.ForeignKey(College, on_delete=models.CASCADE)
+    voter_batch     = models.CharField(max_length=3)
+
     timestamp = models.DateTimeField(auto_now_add=True)
 
     history = AuditTrail()
@@ -179,7 +188,7 @@ class Vote(models.Model):
         display_format = 'Vote'
 
     def __str__(self):
-        return "(" + str(self.serial_number) + ") " + str(self.voter_id_number) + " voted on " + repr(self.timestamp)
+        return "(" + str(self.serial_number) + ") " + str(self.voter) + " voted on " + repr(self.timestamp)
 
 
 class VoteSet(models.Model):
@@ -194,7 +203,7 @@ class VoteSet(models.Model):
         display_format = 'VoteSet'
 
     def __str__(self):
-        return self.vote.voter_id_number + " voted for " \
+        return str(self.vote.voter) + " voted for " \
                + self.candidate.voter.user.first_name + " " + self.candidate.voter.user.last_name
 
 
