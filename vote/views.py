@@ -145,7 +145,7 @@ class VoteView(UserPassesTestMixin, View):
                 candidates[position_type] = {}
 
                 # Then try to fill that partition with candidates running for that position type
-                candidates_type = Candidate.objects.filter(position__base_position__type=position_type).order_by('position__priority').order_by('party__name')
+                candidates_type = Candidate.objects.filter(position__base_position__type=position_type).order_by('position__priority', 'party__name')
 
                 if candidates_type.count() != 0:
                     for candidate in candidates_type:
