@@ -205,7 +205,7 @@
                                 <div id="summary-confirm" class="clearfix">
                                     <button type="button" id="cancel" onclick="closeModal(event)">Revise my
                                         votes</button>
-                                    <input type="submit" id="confirm" value="Confirm my submission" />
+                                    <input type="submit" id="confirm" onclick="this.disabled=true;this.form.submit();" value="Confirm my submission" />
                                 </div>
                                 {% endif %}
                             </div>
