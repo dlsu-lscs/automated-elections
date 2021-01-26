@@ -63,7 +63,7 @@ class Election(models.Model):
 
 
 class ElectionStatus(models.Model):
-    batch = models.CharField(max_length=4)
+    batch = models.CharField(max_length=13)
     college = models.ForeignKey(College, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -188,7 +188,7 @@ class Vote(models.Model):
         display_format = 'Vote'
 
     def __str__(self):
-        return "(" + str(self.serial_number) + ") " + str(self.voter) + " voted on " + repr(self.timestamp)
+        return "(" + str(self.serial_number) + ") " + str(self.voter) + " voted on " + str(self.timestamp)
 
 
 class VoteSet(models.Model):

@@ -59,20 +59,22 @@ fp = open(settings.BASE_DIR + '/email_template.html', 'r')
 HTML_STR = fp.read()
 fp.close()
 
+# Image
+fp = open(settings.BASE_DIR + '/ComelecLogo.png', 'rb')
+img = MIMEImage(fp.read())
+fp.close()
 
 size = len(voters)
-i = 0
 
-for voter in voters:
+for i in tqdm(range(size)):
+    voter = voters[i]
+
     new_password = generate_passcode()
 
     # save the new password to the database
     voter.set_password(new_password)
     voter.save()
 
-    fp = open(settings.BASE_DIR + '/ComelecLogo.png', 'rb')
-    img = MIMEImage(fp.read())
-    fp.close()
     img.add_header('Content-ID', '<logo>')
 
     # TODO: Change URL
@@ -102,5 +104,3 @@ To vote, go to this link: https://127.0.0.1:8000/login
         msg.send()
     except:
         print('Email did not sent for ' + voter.username)
-    
-    i += 1

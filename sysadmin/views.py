@@ -1043,7 +1043,7 @@ class CandidatesView(SysadminView):
                 or position.base_position.type == BasePosition.BATCH \
                     and position.unit.batch == voter.user.username[:3] \
                     and position.unit.college_id == voter.college_id \
-                    and position.unit.campus == vote.college_id:
+                    and position.unit.campus_id == voter.campus_id:
             # Create the candidate
             Candidate.objects.create(voter=voter, position=position, party=party)
         else:
