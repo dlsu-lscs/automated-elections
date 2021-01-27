@@ -34,6 +34,7 @@ class VoteView(UserPassesTestMixin, View):
 
     # TODO: To remove this, restart the server F
     context_cache = {}
+    poll_count = None
 
     # Check for duplicate votes and positions in a voteset
     @staticmethod
@@ -48,6 +49,21 @@ class VoteView(UserPassesTestMixin, View):
         votes = list(filter(lambda vote: vote is not False, votes))
 
         return len(positions) == len(list(set(positions))) and len(votes) == len(list(set(votes)))
+    
+    # Check for duplicate votes and positions in a voteset
+    @staticmethod
+    def count_pollset(self, pollset):
+        if self.poll_count == None:
+            self.poll_count = Poll.objects.count()
+        
+        if len(pollset) != self.poll_count:
+            return False
+
+        for p in pollset:
+            if p[1] != 'no' and p[1] != 'yes':
+                return False
+        
+        return True
 
     # Generate a serial number
     @staticmethod
@@ -252,13 +268,15 @@ class VoteView(UserPassesTestMixin, View):
                     else:
                         poll_votes.append((poll, request.POST.get(poll)[request.POST.get(poll).rfind('-')+1:],))
 
-            polls = Polls.get.all()
-            print(len(polls))
-            return
-
             # TODO: Check if this will have a bug
             # Proceed only when there are no duplicate votes and positions
             if self.contains_duplicates(votes):
+
+                if not self.count_pollset(self, poll_votes):
+                    messages.error(request, 'Some poll questions were not answered.')
+
+                    return self.get(request)
+
                 # If there are no duplicates, convert the list of tuples into a dict
                 votes_dict = {}
 
