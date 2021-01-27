@@ -22,22 +22,24 @@
     <link href="{% static 'vote/css/components/candidates-form.css' %}" rel="stylesheet" type="text/css" />
     <link href="{% static 'vote/css/components/vote-summary.css' %}" rel="stylesheet" type="text/css" />
     <link href="{% static 'vote/css/components/read_more-modal.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'vote/css/components/message.css' %}" rel="stylesheet" type="text/css" />
 
     <!-- scripts -->
     <script src="{% static 'vote/js/abstain.js' %}" type="text/javascript"></script>
     <script src="{% static 'vote/js/vote_modal.js' %}" type="text/javascript"></script>
     <script src="{% static 'vote/js/read_more-modal.js' %}" type="text/javascript"></script>
+    <script src="{% static 'vote/js/error-modal.js' %}" type="text/javascript"></script>
 
 </head>
 
 <body>
     <div id="voting-container">
         {% if messages %}
-        <div>
             {% for message in messages %}
-            <p {% if message.tags %}id="{{ message.tags }}" {% endif %}>{{ message }}</p>
+            <p {% if message.tags %}id="{{ message.tags }}" {% endif %}>
+                {{ message }}
+            </p>
             {% endfor %}
-        </div>
         {% endif %}
         <div id="voter-column">
             <div class="voter-label">
@@ -208,6 +210,15 @@
                                     <input type="submit" id="confirm" onclick="this.disabled=true;this.form.submit();" value="Confirm my submission" />
                                 </div>
                                 {% endif %}
+                            </div>
+                        </div>
+
+                        <div id="required-polls">
+                            <div id="message-box">
+                                <p class="message">You must provide an answer to all polls.</p>
+                                <div id="message-control">
+                                    <button type="button" id="message-dismiss" onclick="closeMessage(event)">Close</button>
+                                </div>
                             </div>
                         </div>
 
