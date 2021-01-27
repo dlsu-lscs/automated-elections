@@ -72,25 +72,25 @@
                         <div class="candidate" style="grid-row-start:1; grid-column-start:1; ">
                             <h1 class="poll-choice">Yes</h1>
                             <input type="radio" name="{{ poll.identifier }}" value="yes"
-                                id="{{ poll.identifier }}-yes"
-                                onclick="select('{{ poll.identifier }}-abstain-button')">
+                                id="{{ poll.identifier }}-yes" required>
+                                <!-- onclick="select('{{ poll.identifier }}-abstain-button')"> -->
                             <label for="{{ poll.identifier }}-yes"></label>
                         </div>
                         <div class="candidate" style="grid-row-start:1; grid-column-start:3; ">
                             <h1 class="poll-choice">No</h1>
                             <input type="radio" name="{{ poll.identifier }}" value="no"
-                                id="{{ poll.identifier }}-no"
-                                onclick="select('{{ poll.identifier }}-abstain-button')">
+                                id="{{ poll.identifier }}-no">
+                                <!-- onclick="select('{{ poll.identifier }}-abstain-button')"> -->
                             <label for="{{ poll.identifier }}-no"></label>
                         </div>
                     </div>
-                    <div class="abstain-div">
+                    <!-- <div class="abstain-div">
                         <button type="button" id="{{ poll.identifier }}-abstain-button"
                             class="abstain abstain-active"
                             onclick="abstain('{{ poll.identifier }}')">
                             Abstain
                         </button>
-                    </div>
+                    </div> -->
                 </div>
                 {% endfor %}
                 {% endif %}
@@ -210,6 +210,11 @@
                                 {% endif %}
                             </div>
                         </div>
+
+                        <!-- <div id="required-polls">
+                            You must provide an answer to all polls.
+                            <button type="button" id="cancel" onclick="closeModal(event)">Close</button>
+                        </div> -->
             </form>
         </div>
     </div>

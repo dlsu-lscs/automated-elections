@@ -5,6 +5,8 @@ function showVote(positions, polls) {
     // Remember the polls
     polls = JSON.parse(polls);
 
+    console.log(polls);
+
     // For each position, collect each vote, if any
     for (let index = 0; index < positions.length; index++) {
         // Check if the input with this position is checked
@@ -43,8 +45,9 @@ function showVote(positions, polls) {
             inputParent = element.parentElement.getElementsByClassName('poll-choice')[0];
             vote = inputParent.innerHTML;
         } else {
-            // If no input has been checked, it means the voter has abstained on that position
-            vote = "(abstained)";
+            //  cannot abstain
+            document.getElementById('required-polls').style.display = "block";
+            return
         }
 
         // Put the candidate name in the summary modal
@@ -60,6 +63,10 @@ function showVote(positions, polls) {
 
 function closeModal() {
     document.getElementById('vote-modal').style.display = "none";
+}
+
+function closeRequired() {
+    document.getElementById('required-polls').style.display = "none";
 }
 
 window.onclick = function (event) {

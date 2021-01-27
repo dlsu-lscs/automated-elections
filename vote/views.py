@@ -247,12 +247,18 @@ class VoteView(UserPassesTestMixin, View):
             if polls is not False and len(polls) > 0:
                 for poll in polls:
                     if (request.POST.get(poll) == None):
-                        poll_votes.append((poll, False,))
+                        poll_votes.append((poll, 'abstain',))
+                        # poll_votes.append((poll, False))
                     else:
                         poll_votes.append((poll, request.POST.get(poll)[request.POST.get(poll).rfind('-')+1:],))
 
+            polls = Polls.get.all()
+            print(len(polls))
+            return
+
+            # TODO: Check if this will have a bug
             # Proceed only when there are no duplicate votes and positions
-            if self.contains_duplicates(votes) and self.contains_duplicates(poll_votes):
+            if self.contains_duplicates(votes):
                 # If there are no duplicates, convert the list of tuples into a dict
                 votes_dict = {}
 

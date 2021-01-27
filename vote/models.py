@@ -218,7 +218,7 @@ class Poll(models.Model):
 class PollAnswerType(Enum):
     YES = "yes"
     NO = "no"
-    ABSTAIN = "abstain"
+    # ABSTAIN = "abstain"
 
     @classmethod
     def choices(cls):
@@ -228,7 +228,7 @@ class PollAnswerType(Enum):
 class PollSet(models.Model):
     vote = models.ForeignKey(Vote, on_delete=models.CASCADE)
     poll = models.ForeignKey(Poll, on_delete=models.CASCADE, null=True)
-    answer = models.CharField(max_length=7, choices=PollAnswerType.choices())
+    answer = models.CharField(max_length=3, choices=PollAnswerType.choices())
 
     history = AuditTrail()
     objects = AuditManager.as_manager()
