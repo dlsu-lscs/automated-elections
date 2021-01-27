@@ -1,6 +1,6 @@
 CREATE TABLE vote_pollset (
     id          SERIAL      PRIMARY KEY,
-    answer      VARCHAR(7)  NOT NULL,
+    answer      VARCHAR(3)  NOT NULL, -- yes or no
     poll_id     INT,
     vote_id     INT         NOT NULL
 );
