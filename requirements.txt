@@ -15,4 +15,6 @@ pytz==2020.5
 requests==2.25.1
 six==1.15.0
 sqlparse==0.4.1
+tdqm==0.0.1
+tqdm==4.56.0
 urllib3==1.26.2

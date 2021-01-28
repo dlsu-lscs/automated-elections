@@ -174,7 +174,7 @@ class Vote(models.Model):
     voter = models.ForeignKey(Voter, on_delete=models.CASCADE)
     # voter_id_number = models.CharField(max_length=8, unique=True)
 
-    serial_number = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    serial_number   = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     voter_campus    = models.ForeignKey(Campus, on_delete=models.CASCADE)
     voter_college   = models.ForeignKey(College, on_delete=models.CASCADE)
     voter_batch     = models.CharField(max_length=3)
@@ -203,8 +203,7 @@ class VoteSet(models.Model):
         display_format = 'VoteSet'
 
     def __str__(self):
-        return str(self.vote.voter) + " voted for " \
-               + self.candidate.voter.user.first_name + " " + self.candidate.voter.user.last_name
+        return str(self.vote.serial_number)
 
 
 class Poll(models.Model):
@@ -237,5 +236,4 @@ class PollSet(models.Model):
         display_format = 'PollSet'
 
     def __str__(self):
-        return self.vote.voter_id_number + " voted for " \
-               + self.answer + " in " + self.poll.name
+        return str(self.vote.serial_number)

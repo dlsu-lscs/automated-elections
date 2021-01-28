@@ -1,10 +1,26 @@
+"""
+Emails a specific college of the system
+
+Arguments
+    1-n: colleges eg CCS, COS
+
+ex.
+    python emailer.py CCS COS SOE
+    python emailer.py CCS
+"""
+
 import environ
 import os
 from random import randint
 from tqdm import tqdm
+from sys import argv
 
 import django
 from django.conf import settings
+
+if len(argv) < 2:
+    print('No Colleges were passed as arguments')
+    exit()
 
 env = environ.Env()
 environ.Env.read_env('autoelect/settings/.env')
@@ -40,10 +56,25 @@ django.setup()
 
 from email.mime.image import MIMEImage
 from django.core.mail import EmailMultiAlternatives
-from vote.models import AuthUser as User, Voter
+from vote.models import AuthUser as User, Voter, College
 
-# get all voters
-voters = User.objects.filter(voter__voting_status=False, voter__eligibility_status=True)
+# Get all voters
+colleges = argv[1:]
+
+for college in colleges:
+    # This will throw an error if object not found
+    try:
+        College.objects.get(name=college)
+    except:
+        print('College "' + college + '" was not found')
+        exit()
+
+# Get all voters
+voters = User.objects.filter(voter__college__name__in=colleges ,voter__voting_status=False, voter__eligibility_status=True)
+
+if voters.count() == 0:
+    print('No voters found')
+    exit()
 
 def generate_passcode():
     length = 8
@@ -83,24 +114,24 @@ for i in tqdm(range(size)):
 DLSU Comelec is inviting to you to vote in the elections.
 Voter ID: {}
 Voter Key: {}
-To vote, go to this link: https://127.0.0.1:8000/login
+To vote, go to this link: https://usg-election.dlsu.edu.ph/login
     '''.format(voter.username, new_password)
 
     # TODO: make lodash
-    html = HTML_STR
-    html = html.replace('11xxxxxx', voter.username, 2)
-    html = html.replace('xxxxxxxx', new_password, 1)
+    # html = HTML_STR
+    # html = html.replace('11xxxxxx', voter.username, 2)
+    # html = html.replace('xxxxxxxx', new_password, 1)
 
-    msg = EmailMultiAlternatives(
-        subject = subject,
-        body = text,
-        from_email = 'usg.election@gmail.com',
-        to = [ voter.email ]
-    )
-    msg.attach_alternative(html, "text/html")
-    msg.attach(img)
+    # msg = EmailMultiAlternatives(
+    #     subject = subject,
+    #     body = text,
+    #     from_email = 'usg.election@gmail.com',
+    #     to = [ voter.email ]
+    # )
+    # msg.attach_alternative(html, "text/html")
+    # msg.attach(img)
     
-    try:
-        msg.send()
-    except:
-        print('Email did not sent for ' + voter.username)
+    # try:
+    #     msg.send()
+    # except:
+    #     print('Email did not sent for ' + voter.username)

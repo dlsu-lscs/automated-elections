@@ -32,7 +32,6 @@ def vote_test_func(user):
 class VoteView(UserPassesTestMixin, View):
     template_name = 'vote/voting.html'
 
-    # TODO: To remove this, restart the server F
     context_cache = {}
     poll_count = None
 
@@ -242,160 +241,152 @@ class VoteView(UserPassesTestMixin, View):
         voter = request.user.voter
 
         # Check if the voter has already voted
-        # If not yet...
-        if not voter.voting_status:
-            # Take note of the voter's votes
-            votes = []
-            poll_votes = []
-
-            # Collect all "voteable" positions
-            positions = request.POST.getlist('position')
-
-            # Collect all polls
-            polls = request.POST.getlist('poll')
-
-            if positions is not False and len(positions) > 0:
-                for position in positions:
-                    # For each position, get the voter's pick through its identifier
-                    # It should return False when the voter abstained for that position (picked no one)
-                    votes.append((position, request.POST.get(position, False),))
-
-            if polls is not False and len(polls) > 0:
-                for poll in polls:
-                    if (request.POST.get(poll) == None):
-                        poll_votes.append((poll, 'abstain',))
-                        # poll_votes.append((poll, False))
-                    else:
-                        poll_votes.append((poll, request.POST.get(poll)[request.POST.get(poll).rfind('-')+1:],))
-
-            # TODO: Check if this will have a bug
-            # Proceed only when there are no duplicate votes and positions
-            if self.contains_duplicates(votes):
-
-                if not self.count_pollset(self, poll_votes):
-                    messages.error(request, 'Some poll questions were not answered.')
-
-                    return self.get(request)
-
-                # If there are no duplicates, convert the list of tuples into a dict
-                votes_dict = {}
-
-                for vote in votes:
-                    votes_dict[vote[0]] = vote[1]
-
-                votes = votes_dict
-
-                poll_votes_dict = {}
-
-                for poll in poll_votes:
-                    poll_votes_dict[poll[0]] = poll[1]
-
-                polls = poll_votes_dict
-
-                try:
-                    # Change the identifiers to the actual candidates they represent
-                    for position, candidate in votes.items():
-                        votes[position] = (Position.objects.get(identifier=position),
-                                           Candidate.objects.get(
-                                               identifier=candidate) if candidate is not False else False,)
-
-                    for identifier, answer in polls.items():
-                        polls[identifier] = (Poll.objects.get(identifier=identifier),
-                                           answer,)
-
-                    with transaction.atomic():
-                        # Create a vote object to represent a single vote of a user
-                        vote = Vote(
-                            voter=voter,
-                            voter_campus_id=voter.campus_id,
-                            voter_college_id=voter.college_id,
-                            voter_batch=voter.user.username[:3],
-                        )
-
-                        vote.save(using='vote1')
-                        vote.save(using='vote2')
-                        vote.save(using='vote3')
-                        vote.save()
-
-                        # Create a vote set array representing the individual votes to be saved in the database
-                        actual_votes = [
-                            VoteSet(vote=vote,
-                                    candidate=(position_candidate[1] if position_candidate[1] is not False else None),
-                                    position=position_candidate[0]) for position_candidate in votes.values()
-                        ]
-
-                        actual_poll_votes = [
-                            PollSet(vote=vote,
-                                    poll=(poll[0]),
-                                    answer=(poll[1])) for poll in polls.values()
-                        ]
-
-                        # Save all votes into the database
-                        for actual_vote in actual_votes:
-                            actual_vote.save()
-                            actual_vote.save(using='vote1')
-                            actual_vote.save(using='vote2')
-                            actual_vote.save(using='vote3')
-
-                        for actual_poll_vote in actual_poll_votes:
-                            actual_poll_vote.save()
-                            actual_poll_vote.save(using='vote1')
-                            actual_poll_vote.save(using='vote2')
-                            actual_poll_vote.save(using='vote3')
-
-                        # Mark the voter as already voted
-                        voter.voting_status = True
-                        voter.save()
-
-                        timestamp = vote.timestamp.__str__()
-                        # print(timestamp)
-
-                        # Send email receipt
-                        self.send_email_receipt(request.user, votes, str(vote.serial_number), timestamp)
-
-                    # Log the user out
-                    logout(request)
-
-                    return redirect('logout:logout_voter')
-                except PollAnswerType.ValueError:
-                    # One of the votes for the polls is not a valid answer
-                    messages.error(request, 'Some of your answers to the polls do not exist')
-
-                    return self.get(request)
-                except Candidate.DoesNotExist:
-                    # One of the votes do not represent a candidate
-                    messages.error(request, 'One of your voted candidates do not exist.')
-
-                    return self.get(request)
-                except IntegrityError:
-                    # A vote has already been created to the voter's name, meaning he has already voted
-                    messages.error(request, 'You may have already voted before.')
-
-                    # Log the user out
-                    logout(request)
-
-                    voter.voting_status = True
-                    voter.save()
-
-                    return redirect('logout:logout_fail')
-                # except SMTPException:
-                #     # Could not send an email receipt
-                #     messages.error(request, 'Could not send an email receipt to your email address.')
-                #
-                #     return self.get(request)
-            else:
-                # If there are duplicate votes
-                messages.error(request, 'There are duplicate votes in your submission.')
-
-                return self.get(request)
-        else:
+        if voter.voting_status:
             # But if the voter already did...
             messages.error(request, 'You have already voted. You may only vote once.')
+            # Log the user out
+            logout(request)
+            return redirect('logout:logout_fail')
+
+        # Take note of the voter's votes
+        votes = []
+        poll_votes = []
+
+        # Collect all "voteable" positions
+        positions = request.POST.getlist('position')
+
+        # Collect all polls
+        polls = request.POST.getlist('poll')
+
+        if positions is not False and len(positions) > 0:
+            for position in positions:
+                # For each position, get the voter's pick through its identifier
+                # It should return False when the voter abstained for that position (picked no one)
+                votes.append((position, request.POST.get(position, False),))
+
+        if polls is not False and len(polls) > 0:
+            for poll in polls:
+                if (request.POST.get(poll) == None):
+                    poll_votes.append((poll, 'abstain',))
+                    # poll_votes.append((poll, False))
+                else:
+                    poll_votes.append((poll, request.POST.get(poll)[request.POST.get(poll).rfind('-')+1:],))
+
+        # Proceed only when there are no duplicate votes and positions
+        if self.contains_duplicates(votes):
+            # If there are duplicate votes
+            messages.error(request, 'There are duplicate votes in your submission.')
+            return self.get(request)
+        elif not self.count_pollset(self, poll_votes):
+            messages.error(request, 'There are some poll questions not answered.')
+            return self.get(request)
+
+        # If there are no duplicates, convert the list of tuples into a dict
+        votes_dict = {}
+
+        for vote in votes:
+            votes_dict[vote[0]] = vote[1]
+
+        votes = votes_dict
+
+        poll_votes_dict = {}
+
+        for poll in poll_votes:
+            poll_votes_dict[poll[0]] = poll[1]
+
+        polls = poll_votes_dict
+
+        try:
+            # Change the identifiers to the actual candidates they represent
+            for position, candidate in votes.items():
+                votes[position] = (Position.objects.get(identifier=position),
+                                    Candidate.objects.get(
+                                        identifier=candidate) if candidate is not False else False,)
+
+            for identifier, answer in polls.items():
+                polls[identifier] = (Poll.objects.get(identifier=identifier),
+                                    answer,)
+
+            with transaction.atomic():
+                # Create a vote object to represent a single vote of a user
+                vote = Vote(
+                    voter=voter,
+                    voter_campus_id=voter.campus_id,
+                    voter_college_id=voter.college_id,
+                    voter_batch=voter.user.username[:3],
+                )
+
+                vote.save(using='vote1')
+                vote.save(using='vote2')
+                vote.save(using='vote3')
+                vote.save()
+
+                # Create a vote set array representing the individual votes to be saved in the database
+                actual_votes = [
+                    VoteSet(vote=vote,
+                            candidate=(position_candidate[1] if position_candidate[1] is not False else None),
+                            position=position_candidate[0]) for position_candidate in votes.values()
+                ]
+
+                actual_poll_votes = [
+                    PollSet(vote=vote,
+                            poll=(poll[0]),
+                            answer=(poll[1])) for poll in polls.values()
+                ]
+
+                # Save all votes into the database
+                for actual_vote in actual_votes:
+                    actual_vote.save()
+                    actual_vote.save(using='vote1')
+                    actual_vote.save(using='vote2')
+                    actual_vote.save(using='vote3')
+
+                for actual_poll_vote in actual_poll_votes:
+                    actual_poll_vote.save()
+                    actual_poll_vote.save(using='vote1')
+                    actual_poll_vote.save(using='vote2')
+                    actual_poll_vote.save(using='vote3')
+
+                # Mark the voter as already voted
+                voter.voting_status = True
+                voter.save()
+
+                timestamp = vote.timestamp.__str__()
+                # print(timestamp)
+
+                # Send email receipt
+                self.send_email_receipt(request.user, votes, str(vote.serial_number), timestamp)
 
             # Log the user out
             logout(request)
 
+            return redirect('logout:logout_voter')
+        except PollAnswerType.ValueError:
+            # One of the votes for the polls is not a valid answer
+            messages.error(request, 'Some of your answers to the polls do not exist')
+
+            return self.get(request)
+        except Candidate.DoesNotExist:
+            # One of the votes do not represent a candidate
+            messages.error(request, 'One of your voted candidates do not exist.')
+
+            return self.get(request)
+        except IntegrityError:
+            # A vote has already been created to the voter's name, meaning he has already voted
+            messages.error(request, 'You may have already voted before.')
+
+            # Log the user out
+            logout(request)
+
+            voter.voting_status = True
+            voter.save()
+
             return redirect('logout:logout_fail')
+        # except SMTPException:
+        #     # Could not send an email receipt
+        #     messages.error(request, 'Could not send an email receipt to your email address.')
+        #
+        #     return self.get(request)
 
 
 @user_passes_test(vote_test_func)
