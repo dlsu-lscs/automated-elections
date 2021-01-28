@@ -685,7 +685,7 @@ class VotersView(SysadminView):
         )
 
         election_state = ResultsView.get_election_state()
-
+        
         if (election_state == ElectionState.ONGOING.value or election_state == ElectionState.PAUSED.value) \
                 and not voting_status and eligibility_status:
             # Also check if his batch and college is in the election status
@@ -1104,7 +1104,7 @@ class CandidatesView(SysadminView):
             ) \
                 .order_by('voter__user__username')
 
-        voters = Voter.objects.all().order_by('user__username')
+        # voters = Voter.objects.all().order_by('user__username')
         positions = Position.objects.all().order_by('unit__name', 'base_position__name')
         parties = Party.objects.all().order_by('name')
         issues = Issue.objects.all().order_by('name')
@@ -1114,7 +1114,6 @@ class CandidatesView(SysadminView):
 
         context = {
             'candidates': paginated_candidates,
-            'voters': voters,
             'positions': positions,
             'parties': parties,
             'issues': issues,
@@ -1148,14 +1147,10 @@ class CandidatesView(SysadminView):
                     if candidate is not False and position is not False and party is not False:
                         # Check for missing rows
                         try:
-                            # Clean the input
-                            candidate_details = candidate.split(":", 2)
                             position_details = position.split(":", 2)
 
-                            if len(position_details) != 2 or len(candidate_details) != 2:
+                            if len(position_details) != 2:
                                 raise ValueError
-
-                            candidate = candidate_details[0].strip()
 
                             position_unit = position_details[0].strip()
                             position_name = position_details[1].strip()

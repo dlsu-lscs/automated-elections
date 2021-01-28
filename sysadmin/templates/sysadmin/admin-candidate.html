@@ -106,13 +106,8 @@
             <input type="hidden" name="form-type" value="add-candidate">
             <div class="info-container">
                 <div class="info-label"> Student</div>
-                <input type="text" class="info-input" list="voters" name="cand-voter"
+                <input type="text" class="info-input" name="cand-voter"
                        placeholder="Candidate" required="required">
-                <datalist id="voters">
-                    {% for voter in voters %}
-                        <option value="{{ voter.user.username }}: {{ voter.user.last_name }}, {{ voter.user.first_name }}">
-                    {% endfor %}
-                </datalist>
             </div>
 
             <div class="info-container">
