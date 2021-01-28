@@ -11,12 +11,16 @@ class AuthUserAdmin(admin.ModelAdmin):
 admin.site.register(College)
 admin.site.register(Unit)
 admin.site.register(Position)
-admin.site.register(Voter)
 admin.site.register(Party)
 admin.site.register(Candidate)
 admin.site.register(Issue)
 admin.site.register(Take)
 admin.site.register(Poll)
+
+@admin.register(Voter)
+class VoterAdmin(admin.ModelAdmin):
+    ordering = ['user__username']
+    search_fields = ['user__username']
 
 @admin.register(Vote)
 class VoteAdmin(admin.ModelAdmin):
