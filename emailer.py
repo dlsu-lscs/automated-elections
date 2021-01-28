@@ -118,20 +118,20 @@ To vote, go to this link: https://usg-election.dlsu.edu.ph/login
     '''.format(voter.username, new_password)
 
     # TODO: make lodash
-    # html = HTML_STR
-    # html = html.replace('11xxxxxx', voter.username, 2)
-    # html = html.replace('xxxxxxxx', new_password, 1)
+    html = HTML_STR
+    html = html.replace('11xxxxxx', voter.username, 2)
+    html = html.replace('xxxxxxxx', new_password, 1)
 
-    # msg = EmailMultiAlternatives(
-    #     subject = subject,
-    #     body = text,
-    #     from_email = 'usg.election@gmail.com',
-    #     to = [ voter.email ]
-    # )
-    # msg.attach_alternative(html, "text/html")
-    # msg.attach(img)
+    msg = EmailMultiAlternatives(
+        subject = subject,
+        body = text,
+        from_email = 'usg.election@gmail.com',
+        to = [ voter.email ]
+    )
+    msg.attach_alternative(html, "text/html")
+    msg.attach(img)
     
-    # try:
-    #     msg.send()
-    # except:
-    #     print('Email did not sent for ' + voter.username)
+    try:
+        msg.send()
+    except:
+        print('Email did not sent for ' + voter.username)
