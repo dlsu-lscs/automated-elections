@@ -1,6 +1,6 @@
 .candidates-row {
-    width: calc(100% - 85px);
-    margin: 40px;
+    width: calc(100% - 40px);
+    margin: 20px;
     margin-bottom: 0px;
     padding-bottom: 68px;
     border-bottom: 2px solid #D7D7D7;
@@ -48,7 +48,7 @@
     font-weight: 700;
     color: var(--theme-green);
     font-size: 1.4rem;
-    text-align: left;
+    text-align: center;
 }
 
 .candidate-category {
@@ -57,14 +57,13 @@
     font-size: 1.7rem;
     text-align: center;
     margin: auto;
-    width: 50%;
     padding: 20px;
 }
 
 .candidate {
     display: inline-block;
     float: left;
-    width: 33.33%;
+    width: 80%;
     text-align: center;
     font-family: 'Open Sans', sans-serif;
 }
@@ -73,25 +72,26 @@
 .candidate-party {
     padding-top: 3px;
     padding-bottom: 3px;
+    font-size: 0.7rem; 
 }
 
 .candidate-img {
-    height: 85px;
-    width: 85px;
+    height: auto; 
+    width: 120%; 
     background-size: cover;
     margin-top: 40px;
     margin-bottom: 15px;
+    border-radius: 50%; 
 }
 
 .candidate-name {
     font-weight: 700;
-    font-size: 0.85rem;
+    height: 50px; 
 }
 
 .candidate-party {
     font-style: italic;
-    font-size: 0.85rem;
-    height: 45px;
+    height: 90px; 
 }
 
 .candidate-response {
@@ -124,20 +124,32 @@
     width: 100%;
 }
 
-@media only screen and (min-width: 900px) {
+@media only screen and (min-width: 600px) {
+    .candidate-name, 
     .candidate-party {
-      height: 90px; 
+        font-size: 0.8rem; 
+    }
+    .candidate-position {
+        text-align: left; 
+    }
+    .candidate-img {
+        width: 100%; 
     }
 }
 
-@media only screen and (min-width: 1000px) {
+@media only screen and (min-width: 1200px) {
+    .candidate-name, 
     .candidate-party {
-      height: 75px; 
+        font-size: 1.0rem; 
     }
-}
-
-@media only screen and (min-width: 1280px) {
-    .candidate-party {
-      height: 61px; 
+    .candidates-row {
+        width: calc(100% - 85px);
+        margin: 40px;
+    }
+    .candidate {
+        width: 70%; 
+    }
+    .candidate-img {
+        width: 70%; 
     }
 }

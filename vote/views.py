@@ -188,6 +188,9 @@ class VoteView(UserPassesTestMixin, View):
                             if campus != candidate_campus or college != candidate_college or batch != candidate_batch:
                                 continue
 
+                        print()
+                        # Append candidate image 
+                        candidate.image = 'uploads/' + candidate.voter.user.first_name.lower().strip().replace(' ', '_') + "_" + candidate.voter.user.last_name.lower().strip() + '.png'
                         # Only add the candidate if all the conditions above have been satisfied
                         position = candidate.position
 

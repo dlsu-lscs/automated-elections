@@ -8,7 +8,7 @@
     font-family: 'Montserrat', sans-serif;
     color: var(--theme-green);
     font-weight: 700;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
 }
 
 .voter-info {
@@ -16,7 +16,7 @@
     padding-top: 5px;
     padding-bottom: 5px;
     margin-bottom: 25px;
-    font-size: 1.3rem;
+    font-size: 0.8rem;
 }
 
 #voter-column,
@@ -28,6 +28,7 @@
 }
 
 #voter-column {
+    display: flex; 
     background-color: var(--theme-lighter-grey);
     padding-top: 30px;
 }
@@ -51,4 +52,22 @@
     font-weight: 700;
     margin-left: 10px;
     line-height: 1.75rem;
+}
+
+@media only screen and (min-width: 600px) {
+    .voter-label {
+        font-size: 1.3rem; 
+    }
+    .voter-info {
+        font-size: 1.1rem; 
+    }
+}
+
+@media only screen and (min-width: 800px) {
+    .voter-label {
+        font-size: 1.5rem; 
+    }
+    .voter-info {
+        font-size: 1.3rem; 
+    }
 }

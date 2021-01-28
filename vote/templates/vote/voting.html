@@ -5,7 +5,7 @@
 
 <head>
     <title>USG Elections</title>
-
+    <meta name="viewport" content="height=device-height, initial-scale=1">
     <!-- external links for typefaces -->
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
@@ -42,18 +42,22 @@
             {% endfor %}
         {% endif %}
         <div id="voter-column">
-            <div class="voter-label">
-                Name
+            <div>
+                <div class="voter-label">
+                    Name
+                </div>
+                <div class="voter-info" id="voter-name">
+                    {{ user.first_name }} {{ user.last_name }}
+                </div>
             </div>
-            <div class="voter-info" id="voter-name">
-                {{ user.first_name }} {{ user.last_name }}
-            </div>
-
-            <div class="voter-label">
-                ID Number
-            </div>
-            <div class="voter-info" id="voter-od">
-                {{ user.username }}
+            
+            <div style="margin-left:40px">
+                <div class="voter-label">
+                    ID Number
+                </div>
+                <div class="voter-info" id="voter-od">
+                    {{ user.username }}
+                </div>
             </div>
         </div>
         <div id="candidates-column">
@@ -102,7 +106,7 @@
                     {{ position_type|upper }}
                 </div>
                 {% for position, each_candidate in candidates_per_position.items %}
-                <div class="candidates-row clearfix">
+                <div class="candidates-row">
                     <div class="candidate-position">
                         {{ position.base_position.name|upper }}
                     </div>
@@ -123,12 +127,19 @@
                                 <div class="candidate" style="grid-column-start:2; ">{% endif %}
 
 
-                                    <img src="{% static 'vote/assets/svg/user.svg' %}" class="candidate-img" />
-                                    <div class="candidate-name">{{ candidate.voter.user.first_name }}
-                                        {{ candidate.voter.user.last_name }}</div>
+                                    <img src="{{ candidate.image }}" class="candidate-img" />
+                                    <div class="candidate-name">
+                                        {{ candidate.voter.user.first_name }}
+                                        {{ candidate.voter.user.last_name }}
+                                    </div>
                                     <div class="candidate-party">
                                         {% if candidate.party %}{{ candidate.party.name }}{% else %}
-                                        Independent{% endif %}</div>
+                                        Independent{% endif %}
+                                        <br>
+                                        {{ candidate.voter.college}}
+                                        <br>
+                                        {{ candidate.voter.campus}}
+                                    </div>
                                     <div class="candidate-response">
                                         <a id="response"
                                             onclick="hintBrowser('{{ csrf_token }}', '{{ candidate.identifier }}')"
