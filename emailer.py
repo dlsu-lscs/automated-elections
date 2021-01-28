@@ -97,7 +97,14 @@ fp.close()
 
 size = len(voters)
 
+fp = open(settings.BASE_DIR + '/deletethis.csv', 'w')
+n = 500
+
 for i in tqdm(range(size)):
+    if i % n == 0:
+        fp.close()
+        fp = open(settings.BASE_DIR + '/accounts_' + str(i // n) + '.csv', 'w')
+
     voter = voters[i]
 
     new_password = generate_passcode()
@@ -105,6 +112,8 @@ for i in tqdm(range(size)):
     # save the new password to the database
     voter.set_password(new_password)
     voter.save()
+
+    fp.write(voter.username + ',' + new_password + '\n')
 
     img.add_header('Content-ID', '<logo>')
 
@@ -135,3 +144,5 @@ To vote, go to this link: https://usg-election.dlsu.edu.ph/login
         msg.send()
     except:
         print('Email did not sent for ' + voter.username)
+
+fp.close()

@@ -154,7 +154,7 @@ class Candidate(models.Model):
 
 
 class Issue(models.Model):
-    name = models.CharField(max_length=64, unique=True)
+    name = models.TextField()
 
     def __str__(self):
         return self.name
@@ -207,7 +207,7 @@ class VoteSet(models.Model):
 
 
 class Poll(models.Model):
-    name = models.CharField(max_length=64, unique=True)
+    name = models.TextField()
     identifier = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     def __str__(self):
