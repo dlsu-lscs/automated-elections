@@ -190,7 +190,7 @@ class VoteView(UserPassesTestMixin, View):
 
                         print()
                         # Append candidate image 
-                        candidate.image = 'uploads/' + candidate.voter.user.first_name.lower().strip().replace(' ', '_') + "_" + candidate.voter.user.last_name.lower().strip() + '.png'
+                        candidate.image = 'uploads/' + candidate.voter.user.first_name.lower().strip().replace(' ', '_') + "_" + candidate.voter.user.last_name.lower().strip().replace(' ', '_') + '.png'
                         # Only add the candidate if all the conditions above have been satisfied
                         position = candidate.position
 
