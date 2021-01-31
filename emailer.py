@@ -1,4 +1,4 @@
-"""
+'''
 Emails a specific college of the system
 
 Arguments
@@ -7,17 +7,16 @@ Arguments
 ex.
     python emailer.py CCS COS SOE
     python emailer.py CCS
-"""
+'''
 
+import base64
 import smtplib
 import environ
 import os
 from random import randint
 from tqdm import tqdm
 from sys import argv
-from email.mime.image import MIMEImage
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from mailjet_rest import Client
 
 import django
 from django.conf import settings
@@ -28,6 +27,8 @@ if len(argv) < 2:
 
 env = environ.Env()
 environ.Env.read_env('autoelect/settings/.env')
+
+mailjet = Client(auth=(env('MJ_APIKEY_PUBLIC'), env('MJ_APIKEY_PRIVATE')), version='v3.1')
 
 #### DJANGO SETUP
 settings.configure(
@@ -79,7 +80,7 @@ for college in colleges:
     try:
         College.objects.get(name=college)
     except:
-        print('College "' + college + '" was not found')
+        print('College '' + college + '' was not found')
         exit()
 
 # Get all voters
@@ -97,28 +98,16 @@ fp.close()
 
 # IMAGE
 fp = open(settings.BASE_DIR + '/ComelecLogo.png', 'rb')
-img = MIMEImage(fp.read())
+img = base64.b64encode(fp.read()).decode('ascii')
 fp.close()
-img.add_header('Content-ID', '<logo>')
 
-######### EMAILER SETUP
-s = smtplib.SMTP('mail.usg-election.com', 587)
-s.ehlo()
-s.starttls()
-s.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-
-# fp = open(settings.BASE_DIR + '/deletethis.csv', 'w')
+fp = open(settings.BASE_DIR + '/deletethis.csv', 'w')
 n = 500
 
-import time
-
-# for i in tqdm(range(skip, size)):
-# for i in tqdm(range(size)):
-for i in range(1):
-    # time.sleep(10)
-    # if i % n == 0:
-    #     fp.close()
-    #     fp = open(settings.BASE_DIR + '/accounts_' + str(i // n) + '.csv', 'w')
+for i in tqdm(range(len(voters))):
+    if i % n == 0:
+        fp.close()
+        fp = open(settings.BASE_DIR + '/accounts_' + str(i // n) + '.csv', 'w')
 
     voter = voters[i]
 
@@ -128,7 +117,7 @@ for i in range(1):
     voter.set_password(new_password)
     voter.save()
 
-    # fp.write(voter.username + ',' + new_password + '\n')
+    fp.write(voter.username + ',' + new_password + '\n')
 
     # TODO: Change URL
     text = '''\
@@ -140,23 +129,36 @@ To vote, go to this link: https://usg-election.dlsu.edu.ph/login
 
     # TODO: make lodash
     html = HTML_STR
-    html = html.replace('11xxxxxx', voter.username, 2)
+    html = html.replace('11xxxxxx', voter, 2)
     html = html.replace('xxxxxxxx', new_password, 1)
 
-    try:
-        msg             = MIMEMultipart('alternative')
-        msg['From']     = 'DLSU COMELEC<{}>'.format(settings.EMAIL_HOST_USER)
-        # TODO: ID NUMBER HERE
-        msg['To']       = '@dlsu.edu.ph'
-        msg['Subject']  = '[COMELEC] Election is now starting'
-
-        msg.attach(MIMEText(text, 'text'))
-        msg.attach(MIMEText(html, 'html'))
-        msg.attach(img)
-        s.send_message(msg)
-    except Exception as e:
-        print(e)
-        print('Email did not sent for {}'.format(voter.username))
+    data = {
+        'Messages': [
+            {
+            'From': {
+                'Email': 'comelec@usg-election.com',
+                'Name': 'DLSU COMELEC'
+            },
+            'To': [
+                { 'Email': voter.email }
+            ],
+            'Subject': '[COMELEC] Election is now starting',
+            'TextPart': text,
+            'HTMLPart': html,
+            'InlinedAttachments': [
+				{
+                    'ContentType': 'img/png',
+                    'Filename': 'logo.png',
+                    'ContentID': 'logo',
+                    'Base64Content': img
+				}
+		    ]
+            }
+        ]
+    }
+    result = mailjet.send.create(data=data)
+    if result.status_code != 200:
+        print('Email did not sent for {}', )
 
 s.close()
 fp.close()
