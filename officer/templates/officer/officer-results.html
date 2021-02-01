@@ -97,9 +97,7 @@
                     </div> -->
                 <!-- </form> -->
             </div>
-            <div id="logo">
-                <img width=500 height=50 src="{% static 'officer/assets/svg/org-logos.svg' %}">
-            </div>
+            {% include 'officer/footer-logo.html' %}
         </div>
     {% endif %}
 
@@ -251,9 +249,7 @@
                 {% endfor %}
             </div>
         </div>
-        <div id="logo">
-            <img width=500 height=50 src="{% static 'officer/assets/svg/org-logos.svg' %}">
-        </div>
+        {% include 'officer/footer-logo.html' %}
     </div>
 
     <div id="Underview" class="tab-content">
@@ -316,12 +312,10 @@
             </div>
         {% endif %}
 
-        <div id="logo">
-            <img width=500 height=50 src="{% static 'officer/assets/svg/org-logos.svg' %}">
-        </div>
+        {% include 'officer/footer-logo.html' %}
     </div>
 
-    <div id="Poll" class="tab-content" {% if poll_results is not False %}data-selected="selected"{% endif %}>
+    <div id="Poll" class="tab-content" {% if election_state != 'ongoing' and election_state != 'paused'  %}data-selected="selected"{% endif %}>
         {% if election_state != 'finished' %}
             <img id="stop" src="{% static 'officer/assets/svg/stop.svg' %}">
             <header>Woah there!</header>
