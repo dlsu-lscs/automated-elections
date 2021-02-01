@@ -105,8 +105,14 @@
 .today-container {
     width: 100%;
     margin-top: 5%;
-
 }
+
+/* .today-stats {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+} */
 
 .today-votes {
     font-size: 30px;
@@ -216,4 +222,8 @@ header {
     text-align: center;
 
     margin-top: 1%;
+}
+
+#table-container {
+    overflow-y: scroll;
 }

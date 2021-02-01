@@ -203,18 +203,18 @@
 
             <div class="today-votes">
                 Total votes per college
-            </div>
-            <div id="college-buttons-container">
-                {% for college, count in overall_votes_college.items %}
-                    <button class="college-buttons" onclick="selectCollege(event, '{{ college }}')"
-                            id="tab-college-{{ college|lower }}">
-                        <div class="bold" style="font-size: 25px">{{ college }}</div>
-                        <div class="big-vote">{{ count }}</div>
-                        <div class="votes"> votes</div>
-                    </button>
-                {% empty %}
-                    No new votes yet.
-                {% endfor %}
+                <div id="college-buttons-container">
+                    {% for college, count in overall_votes_college.items %}
+                        <button class="college-buttons" onclick="selectCollege(event, '{{ college }}')"
+                                id="tab-college-{{ college|lower }}">
+                            <div class="bold" style="font-size: 25px">{{ college }}</div>
+                            <div class="big-vote">{{ count }}</div>
+                            <div class="votes"> votes</div>
+                        </button>
+                    {% empty %}
+                        No new votes yet.
+                    {% endfor %}
+                </div>
             </div>
 
             <div id="college-tab-container">
