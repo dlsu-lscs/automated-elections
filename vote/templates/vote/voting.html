@@ -187,7 +187,7 @@
                                     <select class="info-input" name="take-issue" id="issue-dropdown"
                                         onchange="change_take('{{ csrf_token }}')">
                                         {% for issue in issues %}
-                                        <option>{{ issue.name }}</option>
+                                            <option value="{{ issue.id }}">{{ issue.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>

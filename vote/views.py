@@ -393,10 +393,11 @@ class VoteView(UserPassesTestMixin, View):
 
 @user_passes_test(vote_test_func)
 def json_take(request, candidate_identifier, issue):
+    print(candidate_identifier, issue)
     # Get the take
     try:
         # Then use that identifier to retrieve the candidate's take
-        take = Take.objects.get(candidate__identifier=candidate_identifier, issue__name=issue)
+        take = Take.objects.get(candidate__identifier=candidate_identifier, issue__id=issue)
     except Take.DoesNotExist:
         return JsonResponse({'response': "(no takes on this issue given)"})
     except (Candidate.MultipleObjectsReturned, Candidate.DoesNotExist):
