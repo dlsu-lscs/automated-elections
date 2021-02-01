@@ -1,7 +1,8 @@
 # Create your views here.
 import json
 import traceback
-from email.mime.image import MIMEImage
+import base64
+from mailjet_rest import Client
 
 from django.conf import settings
 from django.contrib import messages
@@ -9,7 +10,6 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import Group
 from django.contrib.auth import logout
-from django.core.mail import EmailMultiAlternatives
 from django.db import transaction, IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -18,6 +18,15 @@ from django.views import View
 # Sends an email receipt containing the voted candidates to the voter
 from vote.models import Issue, Candidate, Voter, Take, Vote, VoteSet, BasePosition, Position, Poll, PollSet, PollAnswerType
 
+# Email template
+fp = open(settings.BASE_DIR + '/email_receipt_template.html', 'r')
+HTML_STR = fp.read()
+fp.close()
+
+# Add image to email 
+fp = open(settings.BASE_DIR + '/ComelecLogo.png', 'rb')
+img = base64.b64encode(fp.read()).decode('ascii')
+fp.close()
 
 # Test function for this view
 def vote_test_func(user):
@@ -47,7 +56,7 @@ class VoteView(UserPassesTestMixin, View):
 
         votes = list(filter(lambda vote: vote is not False, votes))
 
-        return len(positions) == len(list(set(positions))) and len(votes) == len(list(set(votes)))
+        return len(positions) != len(list(set(positions))) or len(votes) != len(list(set(votes)))
     
     # Check for duplicate votes and positions in a voteset
     @staticmethod
@@ -75,53 +84,55 @@ class VoteView(UserPassesTestMixin, View):
     # Sends an email receipt to the voter
     @staticmethod
     def send_email_receipt(user, voted, serial_number, timestamp):
-        # Email template
-        fp = open(settings.BASE_DIR + '/email_receipt_template.html', 'r')
-        HTML_STR = fp.read()
-        fp.close()
-
-        # Add image to email 
-        fp = open(settings.BASE_DIR + '/ComelecLogo.png', 'rb')
-        img = MIMEImage(fp.read())
-        fp.close()
-        img.add_header('Content-ID', '<logo>')
-
-        # Prepare the email contents  
-        voter_name = user.first_name + ' ' + user.last_name
+        # Prepare the email contents
         current_time = timestamp
-        to_email = user.email
-        subject = '[COMELEC] Voter\'s receipt for ' + voter_name
+        subject = '[COMELEC] Voter\'s receipt for ' + user.username
 
         # Replace the HTML in the email template
         html = HTML_STR
-        html = html.replace('VOTERNAME', voter_name, 1)
+        html = html.replace('VOTERNAME', user.username, 1)
         html = html.replace('SERIALNUMBER', serial_number, 1)
         html = html.replace('TIMESTAMP', current_time, 1)
 
         # Alternate plaintext email message
-        message \
-            = '''Good day, {0},\n\nThis is to confirm that you have successfully voted at {1}. \n\nThank you for voting!\nYour serial number is {2}.\n''' \
-            .format(
-            user.first_name,
-            current_time, 
-            serial_number)
+        message = '''Good day, {},
+
+This is to confirm that you have successfully voted at {}.
+
+Thank you for voting!
+Your serial number is {}.
+''' .format(user.username, current_time, serial_number)
 
         # Send an email, but fail silently (accept exception, bust just show message)
-        try:
-            msg = EmailMultiAlternatives(
-                    subject = subject,
-                    body = message,
-                    from_email = settings.EMAIL_HOST_USER,
-                    to = [ to_email ]
-                )
-            msg.attach_alternative(html, "text/html")
-            msg.attach(img)
-            msg.send()
-            # send_mail(subject=subject, from_email=from_email, recipient_list=to_email, message=message,
-            #           fail_silently=False)
-        except Exception:
+        mailjet = Client(auth=(settings.MJ_APIKEY_PUBLIC, settings.MJ_APIKEY_PRIVATE), version='v3.1')
+        data = {
+            'Messages': [
+                {
+                'From': {
+                    'Email': settings.EMAIL_HOST_USER,
+                    'Name': 'DLSU COMELEC'
+                },
+                'To': [
+                    { 'Email': user.email }
+                ],
+                'Subject': '[COMELEC] Election is now starting',
+                'TextPart': message,
+                'HTMLPart': html,
+                'InlinedAttachments': [
+                    {
+                        'ContentType': 'img/png',
+                        'Filename': 'logo.png',
+                        'ContentID': 'logo',
+                        'Base64Content': img
+                    }
+                ]
+                }
+            ]
+        }
+        result = mailjet.send.create(data=data)
+        if result.status_code != 200:
             # Show the exception in the server, but mask it from the user
-            print("Email send failure.")
+            print('Email did not send for ID {}'.format(user.username))
 
             traceback.print_exc()
 
@@ -279,6 +290,7 @@ class VoteView(UserPassesTestMixin, View):
             # If there are duplicate votes
             messages.error(request, 'There are duplicate votes in your submission.')
             return self.get(request)
+
         elif not self.count_pollset(self, poll_votes):
             messages.error(request, 'There are some poll questions not answered.')
             return self.get(request)

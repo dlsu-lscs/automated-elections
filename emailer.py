@@ -129,7 +129,7 @@ To vote, go to this link: https://usg-election.dlsu.edu.ph/login
 
     # TODO: make lodash
     html = HTML_STR
-    html = html.replace('11xxxxxx', voter, 2)
+    html = html.replace('11xxxxxx', voter.username, 2)
     html = html.replace('xxxxxxxx', new_password, 1)
 
     data = {
@@ -160,5 +160,4 @@ To vote, go to this link: https://usg-election.dlsu.edu.ph/login
     if result.status_code != 200:
         print('Email did not sent for {}', )
 
-s.close()
 fp.close()

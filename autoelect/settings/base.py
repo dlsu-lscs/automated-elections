@@ -164,11 +164,14 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 
 # Email settings
-EMAIL_HOST = env('EMAIL_HOST')
+# EMAIL_HOST = env('EMAIL_HOST')
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = int(env('EMAIL_PORT'))
-EMAIL_USE_TLS = True
+# EMAIL_PORT = int(env('EMAIL_PORT'))
+# EMAIL_USE_TLS = True
+
+MJ_APIKEY_PUBLIC = env('MJ_APIKEY_PUBLIC')
+MJ_APIKEY_PRIVATE = env('MJ_APIKEY_PRIVATE')
 
 # Session expiry settings
 # Voting session expires in 30 minutes
