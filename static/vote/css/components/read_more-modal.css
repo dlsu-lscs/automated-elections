@@ -14,7 +14,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow-y: scroll;
+    overflow: scroll;
 }
 
 #modal__content-read {
@@ -141,4 +141,13 @@ blockquote cite:before {
 
 .takes-container {
     display: block;
+}
+
+@media handheld,screen and (max-width: 800px) {
+    #modal-read {
+        width: 90%;
+        left: 5%;
+        height: 80%;
+        top: 10%;
+    }
 }
