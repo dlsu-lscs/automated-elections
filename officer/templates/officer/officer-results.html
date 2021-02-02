@@ -104,7 +104,7 @@
     {% endif %}
 
     <!-- FIRST TAB -->
-    <div id="Overview" class="tab-content">
+    <div id="Overview" class="tab-content" data-selected="selected">
         <div class="today-container">
             <div class="today-stats">
                 <div class="today-votes">
@@ -150,11 +150,11 @@
                         </div>
                     </div>
 
-                    <div class="time 3pm">
-                        <div class="bold">As of 3pm</div>
+                    <div class="time 5pm">
+                        <div class="bold">As of 5pm</div>
                         <div class="big-vote">
-                            {% if votes_today_15 or votes_today_15 == 0 %}
-                                {{ votes_today_15 }}
+                            {% if votes_today_17 or votes_today_17 == 0 %}
+                                {{ votes_today_17 }}
                             {% else %}
                                 N/A
                             {% endif %}
@@ -164,11 +164,11 @@
                         </div>
                     </div>
 
-                    <div class="time 6pm">
-                        <div class="bold">As of 6pm</div>
+                    <div class="time 10pm">
+                        <div class="bold">As of 10pm</div>
                         <div class="big-vote">
-                            {% if votes_today_18 or votes_today_18 == 0 %}
-                                {{ votes_today_18 }}
+                            {% if votes_today_22 or votes_today_22 == 0 %}
+                                {{ votes_today_22 }}
                             {% else %}
                                 N/A
                             {% endif %}
@@ -185,8 +185,8 @@
                         <div class="col-batch">Batch</div>
                         <div class="col-votes">Total Votes</div>
                         <div class="col-12nn">As of 12nn</div>
-                        <div class="col-3pm">As of 3pm</div>
-                        <div class="col-6pm">As of 6pm</div>
+                        <div class="col-5pm">As of 5pm</div>
+                        <div class="col-10pm">As of 10pm</div>
                     </div>
 
                     <!-- TEMPLATES FOR DATA INSERTION. NOTE THAT THERE IS A "row-1" AND "row-2"  FOR THEIR ALTERNATING COLORS -->
@@ -196,8 +196,8 @@
                             <div class="col-batch">{{ batch_result.1 }}</div>
                             <div class="col-votes">{{ batch_result.2 }}</div>
                             <div class="col-12nn">{{ batch_result.3 }}</div>
-                            <div class="col-3pm">{{ batch_result.4 }}</div>
-                            <div class="col-6pm">{{ batch_result.5 }}</div>
+                            <div class="col-5pm">{{ batch_result.4 }}</div>
+                            <div class="col-10pm">{{ batch_result.5 }}</div>
                         </div>
                     {% endfor %}
                 </div>
@@ -231,8 +231,8 @@
                                 <div class="col-batch">Batch</div>
                                 <div class="col-votes">Total Votes</div>
                                 <div class="col-12nn">As of 12nn</div>
-                                <div class="col-3pm">As of 3pm</div>
-                                <div class="col-6pm">As of 6pm</div>
+                                <div class="col-5pm">As of 5pm</div>
+                                <div class="col-10pm">As of 10pm</div>
                             </div>
 
                             <!-- TEMPLATES FOR DATA INSERTION. NOTE THAT THERE IS A "row-1" AND "row-2"  FOR THEIR ALTERNATING COLORS -->
@@ -242,8 +242,8 @@
                                     <div class="col-batch">{{ result.1 }}</div>
                                     <div class="col-votes">{{ result.2 }}</div>
                                     <div class="col-12nn">{{ result.3 }}</div>
-                                    <div class="col-3pm">{{ result.4 }}</div>
-                                    <div class="col-6pm">{{ result.5 }}</div>
+                                    <div class="col-5pm">{{ result.4 }}</div>
+                                    <div class="col-10pm">{{ result.5 }}</div>
                                 </div>
                             {% endfor %}
                         </div>
@@ -321,7 +321,8 @@
         </div>
     </div>
 
-    <div id="Poll" class="tab-content" {% if poll_results is not False %}data-selected="selected"{% endif %}>
+    <!-- <div id="Poll" class="tab-content" {% if poll_results is not False %}data-selected="selected"{% endif %}> -->
+    <div id="Poll" class="tab-content">
         {% if election_state != 'finished' %}
             <img id="stop" src="{% static 'officer/assets/svg/stop.svg' %}">
             <header>Woah there!</header>

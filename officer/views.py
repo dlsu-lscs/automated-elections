@@ -859,12 +859,12 @@ class ResultsView(OfficerView):
             overall_votes_today = votes_today.count()
 
             reference_12 = now.replace(hour=12, minute=0, second=0, microsecond=0)
-            reference_15 = now.replace(hour=15, minute=0, second=0, microsecond=0)
-            reference_18 = now.replace(hour=18, minute=0, second=0, microsecond=0)
+            reference_17 = now.replace(hour=17, minute=0, second=0, microsecond=0)
+            reference_22 = now.replace(hour=22, minute=0, second=0, microsecond=0)
 
             votes_today_12 = votes_today.filter(timestamp__lte=reference_12).count()
-            votes_today_15 = votes_today.filter(timestamp__lte=reference_15).count()
-            votes_today_18 = votes_today.filter(timestamp__lte=reference_18).count()
+            votes_today_17 = votes_today.filter(timestamp__lte=reference_17).count()
+            votes_today_22 = votes_today.filter(timestamp__lte=reference_22).count()
 
             # Votes overall per day per batch
             BATCH_QUERY = ("""
@@ -878,42 +878,42 @@ class ResultsView(OfficerView):
                 	WHERE
                 		v12.timestamp <= DATE(v12.timestamp) + interval '12 hours'
                 	GROUP BY
-                		v12.timestamp,
+                		DATE(v12.timestamp),
                 		v12.voter_batch
                 ),
-                votes_15 AS (
+                votes_17 AS (
                 	SELECT
-                		DATE(v15.timestamp)         AS date15,
-                		v15.voter_batch             AS batch15,
-                		COUNT(v15.serial_number)    AS count15
+                		DATE(v17.timestamp)         AS date17,
+                		v17.voter_batch             AS batch17,
+                		COUNT(v17.serial_number)    AS count17
                 	FROM
-                		vote_vote v15
+                		vote_vote v17
                 	WHERE
-                		v15.timestamp <= DATE(v15.timestamp) + interval '15 hours'
+                		v17.timestamp <= DATE(v17.timestamp) + interval '17 hours'
                 	GROUP BY
-                		DATE(v15.timestamp),
-                		v15.voter_batch
+                		DATE(v17.timestamp),
+                		v17.voter_batch
                 ),
-                votes_18 AS (
+                votes_22 AS (
                 	SELECT
-                		DATE(v18.timestamp)         AS date18,
-                		v18.voter_batch             AS batch18,
-                		COUNT(v18.serial_number)    AS count18
+                		DATE(v22.timestamp)         AS date22,
+                		v22.voter_batch             AS batch22,
+                		COUNT(v22.serial_number)    AS count22
                 	FROM
-                		vote_vote v18
+                		vote_vote v22
                 	WHERE
-                		v18.timestamp <= DATE(v18.timestamp) + interval '18 hours'
+                		v22.timestamp <= DATE(v22.timestamp) + interval '22 hours'
                 	GROUP BY
-                		DATE(v18.timestamp),
-                		v18.voter_batch
+                		DATE(v22.timestamp),
+                		v22.voter_batch
                 )
                 SELECT
                 	DATE(v.timestamp)               AS date,
                 	v.voter_batch                   AS batch,
                 	COUNT(v.serial_number)          AS total_count,
                 	COALESCE(votes_12.count12, 0)   AS as_of_12_nn,
-                	COALESCE(votes_15.count15, 0)   AS as_of_3_pm,
-                	COALESCE(votes_18.count18, 0)   AS as_of_6_pm
+                	COALESCE(votes_17.count17, 0)   AS as_of_3_pm,
+                	COALESCE(votes_22.count22, 0)   AS as_of_6_pm
                 FROM
                 	vote_vote v
                 LEFT JOIN
@@ -921,19 +921,19 @@ class ResultsView(OfficerView):
                 		DATE(v.timestamp) = votes_12.date12
                 		AND v.voter_batch = votes_12.batch12
                 LEFT JOIN
-                	votes_15 ON
-                		DATE(v.timestamp) = votes_15.date15
-                		AND v.voter_batch = votes_15.batch15
+                	votes_17 ON
+                		DATE(v.timestamp) = votes_17.date17
+                		AND v.voter_batch = votes_17.batch17
                 LEFT JOIN
-                	votes_18 ON
-                		DATE(v.timestamp) = votes_18.date18
-                		AND v.voter_batch = votes_18.batch18
+                	votes_22 ON
+                		DATE(v.timestamp) = votes_22.date22
+                		AND v.voter_batch = votes_22.batch22
                 GROUP BY
                 	DATE(v.timestamp),
                 	v.voter_batch,
                     votes_12.count12,
-                    votes_15.count15,
-                    votes_18.count18
+                    votes_17.count17,
+                    votes_22.count22
                 ORDER BY
                    DATE(v.timestamp) DESC,
                    v.voter_batch ASC;
@@ -974,41 +974,41 @@ class ResultsView(OfficerView):
                 		DATE(v12.timestamp),
                 		v12.voter_batch
                 ),
-                votes_15 AS (
+                votes_17 AS (
                 	SELECT
-                		DATE(v15.timestamp)         AS date15,
-                		v15.voter_batch             AS batch15,
-                		COUNT(v15.serial_number)    AS count15
+                		DATE(v17.timestamp)         AS date17,
+                		v17.voter_batch             AS batch17,
+                		COUNT(v17.serial_number)    AS count17
                 	FROM
-                		vote_vote v15
+                		vote_vote v17
                 	WHERE
-                		v15.timestamp <= DATE(v15.timestamp) + interval '15 hours'
-                		AND v15.voter_college_id = %s
+                		v17.timestamp <= DATE(v17.timestamp) + interval '17 hours'
+                		AND v17.voter_college_id = %s
                 	GROUP BY
-                		DATE(v15.timestamp),
-                		v15.voter_batch
+                		DATE(v17.timestamp),
+                		v17.voter_batch
                 ),
-                votes_18 AS (
+                votes_22 AS (
                 	SELECT
-                		DATE(v18.timestamp)         AS date18,
-                		v18.voter_batch             AS batch18,
-                		COUNT(v18.serial_number)    AS count18
+                		DATE(v22.timestamp)         AS date22,
+                		v22.voter_batch             AS batch22,
+                		COUNT(v22.serial_number)    AS count22
                 	FROM
-                		vote_vote v18
+                		vote_vote v22
                 	WHERE
-                		v18.timestamp <= DATE(v18.timestamp) + interval '18 hours'
-                		AND v18.voter_college_id = %s
+                		v22.timestamp <= DATE(v22.timestamp) + interval '22 hours'
+                		AND v22.voter_college_id = %s
                 	GROUP BY
-                		DATE(v18.timestamp),
-                		v18.voter_batch
+                		DATE(v22.timestamp),
+                		v22.voter_batch
                 )
                 SELECT
                 	DATE(v.timestamp)               AS date,
                 	v.voter_batch                   AS batch,
                 	COUNT(v.serial_number)          AS total_count,
                 	COALESCE(votes_12.count12, 0)   AS as_of_12_nn,
-                	COALESCE(votes_15.count15, 0)   AS as_of_3_pm,
-                	COALESCE(votes_18.count18, 0)   AS as_of_6_pm
+                	COALESCE(votes_17.count17, 0)   AS as_of_3_pm,
+                	COALESCE(votes_22.count22, 0)   AS as_of_6_pm
                 FROM
                 	vote_vote v
                 LEFT JOIN
@@ -1016,21 +1016,21 @@ class ResultsView(OfficerView):
                 		DATE(v.timestamp) = votes_12.date12
                 		AND v.voter_batch = votes_12.batch12
                 LEFT JOIN
-                	votes_15 ON
-                		DATE(v.timestamp) = votes_15.date15
-                		AND v.voter_batch = votes_15.batch15
+                	votes_17 ON
+                		DATE(v.timestamp) = votes_17.date17
+                		AND v.voter_batch = votes_17.batch17
                 LEFT JOIN
-                	votes_18 ON
-                		DATE(v.timestamp) = votes_18.date18
-                		AND v.voter_batch = votes_18.batch18
+                	votes_22 ON
+                		DATE(v.timestamp) = votes_22.date22
+                		AND v.voter_batch = votes_22.batch22
                 WHERE
                 	v.voter_college_id = %s
                 GROUP BY
                 	DATE(v.timestamp),
                 	v.voter_batch,
                     votes_12.count12,
-                    votes_15.count15,
-                    votes_18.count18
+                    votes_17.count17,
+                    votes_22.count22
                 ORDER BY
                    DATE(v.timestamp) DESC,
                    v.voter_batch ASC;
@@ -1057,8 +1057,8 @@ class ResultsView(OfficerView):
                 'overall_turnout': overall_turnout,
                 'overall_votes_today': overall_votes_today,
                 'votes_today_12': votes_today_12,
-                'votes_today_15': votes_today_15,
-                'votes_today_18': votes_today_18,
+                'votes_today_17': votes_today_17,
+                'votes_today_22': votes_today_22,
                 'batch_results': batch_results,
                 'eligible_colleges': eligible_colleges,
                 'overall_votes_college': overall_votes_college,

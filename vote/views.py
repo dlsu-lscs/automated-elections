@@ -115,7 +115,7 @@ Your serial number is {}.
                 'To': [
                     { 'Email': user.email }
                 ],
-                'Subject': '[COMELEC] Election is now starting',
+                'Subject': subject,
                 'TextPart': message,
                 'HTMLPart': html,
                 'InlinedAttachments': [

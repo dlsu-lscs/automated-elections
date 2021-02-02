@@ -29,15 +29,7 @@
     padding-left: 15%;
 }
 
-.col-12nn {
-    flex-basis: 15%;
-}
-
-.col-3pm {
-    flex-basis: 15%;
-}
-
-.col-6pm {
+.col-12nn, .col-5pm, .col-10pm {
     flex-basis: 15%;
 }
 
