@@ -97,9 +97,7 @@
                     </div> -->
                 <!-- </form> -->
             </div>
-            <div id="logo">
-                <img width=500 height=50 src="{% static 'officer/assets/svg/org-logos.svg' %}">
-            </div>
+            {% include 'officer/footer-logo.html' %}
         </div>
     {% endif %}
 
@@ -205,18 +203,18 @@
 
             <div class="today-votes">
                 Total votes per college
-            </div>
-            <div id="college-buttons-container">
-                {% for college, count in overall_votes_college.items %}
-                    <button class="college-buttons" onclick="selectCollege(event, '{{ college }}')"
-                            id="tab-college-{{ college|lower }}">
-                        <div class="bold" style="font-size: 25px">{{ college }}</div>
-                        <div class="big-vote">{{ count }}</div>
-                        <div class="votes"> votes</div>
-                    </button>
-                {% empty %}
-                    No new votes yet.
-                {% endfor %}
+                <div id="college-buttons-container">
+                    {% for college, count in overall_votes_college.items %}
+                        <button class="college-buttons" onclick="selectCollege(event, '{{ college }}')"
+                                id="tab-college-{{ college|lower }}">
+                            <div class="bold" style="font-size: 25px">{{ college }}</div>
+                            <div class="big-vote">{{ count }}</div>
+                            <div class="votes"> votes</div>
+                        </button>
+                    {% empty %}
+                        No new votes yet.
+                    {% endfor %}
+                </div>
             </div>
 
             <div id="college-tab-container">
@@ -251,9 +249,7 @@
                 {% endfor %}
             </div>
         </div>
-        <div id="logo">
-            <img width=500 height=50 src="{% static 'officer/assets/svg/org-logos.svg' %}">
-        </div>
+        {% include 'officer/footer-logo.html' %}
     </div>
 
     <div id="Underview" class="tab-content">
@@ -316,13 +312,15 @@
             </div>
         {% endif %}
 
-        <div id="logo">
-            <img width=500 height=50 src="{% static 'officer/assets/svg/org-logos.svg' %}">
-        </div>
+        {% include 'officer/footer-logo.html' %}
     </div>
 
+<<<<<<< HEAD
     <!-- <div id="Poll" class="tab-content" {% if poll_results is not False %}data-selected="selected"{% endif %}> -->
     <div id="Poll" class="tab-content">
+=======
+    <div id="Poll" class="tab-content" {% if election_state != 'ongoing' and election_state != 'paused'  %}data-selected="selected"{% endif %}>
+>>>>>>> fda203006a3e8879e46c7ba610668bade4e7bfe9
         {% if election_state != 'finished' %}
             <img id="stop" src="{% static 'officer/assets/svg/stop.svg' %}">
             <header>Woah there!</header>

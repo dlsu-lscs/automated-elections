@@ -115,5 +115,5 @@ function drawChart(results) {
 if (document.getElementById("Poll").getAttribute("data-selected") === 'selected') {
     document.getElementById("tab-poll").click();
 } else {
-    document.getElementById("tab-underview").click();
+    document.getElementById("tab-overview").click();
 }
