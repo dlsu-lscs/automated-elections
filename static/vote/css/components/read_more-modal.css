@@ -1,6 +1,7 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto:500);
 
 #modal-read {
+    z-index: -5; 
     position: fixed;
     top: 25%;
     left: 25%;
